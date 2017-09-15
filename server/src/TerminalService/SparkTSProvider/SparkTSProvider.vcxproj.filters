@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="DllMain.cpp" />
+    <ClCompile Include="InterfaceFactory.cpp" />
+    <ClCompile Include="RemoteSessionManager.cpp" />
+    <ClCompile Include="WTS\WTSConnection.cpp">
+      <Filter>WTS</Filter>
+    </ClCompile>
+    <ClCompile Include="WTS\WTSLicenseConnection.cpp">
+      <Filter>WTS</Filter>
+    </ClCompile>
+    <ClCompile Include="WTS\WTSListener.cpp">
+      <Filter>WTS</Filter>
+    </ClCompile>
+    <ClCompile Include="WTS\WTSManager.cpp">
+      <Filter>WTS</Filter>
+    </ClCompile>
+    <ClCompile Include="SessionHelper\IniFile.cpp">
+      <Filter>SessionHelper</Filter>
+    </ClCompile>
+    <ClCompile Include="SessionHelper\SessionHelp.cpp">
+      <Filter>SessionHelper</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="InterfaceFactory.h" />
+    <ClInclude Include="RemoteSessionManager.h" />
+    <ClInclude Include="WTS\IWTSConnectionRdp.h">
+      <Filter>WTS</Filter>
+    </ClInclude>
+    <ClInclude Include="WTS\WTSConnection.h">
+      <Filter>WTS</Filter>
+    </ClInclude>
+    <ClInclude Include="WTS\WTSLicenseConnection.h">
+      <Filter>WTS</Filter>
+    </ClInclude>
+    <ClInclude Include="WTS\WTSListener.h">
+      <Filter>WTS</Filter>
+    </ClInclude>
+    <ClInclude Include="WTS\WTSManager.h">
+      <Filter>WTS</Filter>
+    </ClInclude>
+    <ClInclude Include="SessionHelper\IniFile.h">
+      <Filter>SessionHelper</Filter>
+    </ClInclude>
+    <ClInclude Include="SessionHelper\SessionHelp.h">
+      <Filter>SessionHelper</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="NepProvider.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="WRDS">
+      <UniqueIdentifier>{e36c7c98-84a8-4bcd-af3a-fa296a8b7a92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WTS">
+      <UniqueIdentifier>{56ee75c7-fc27-4892-a95d-86f5c582a070}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SessionHelper">
+      <UniqueIdentifier>{07b69a8f-bcac-4140-81cc-fab77e6e1f34}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,54 @@
+﻿#pragma once
+
+#ifndef __ICOMMUNICATE_H__
+#define __ICOMMUNICATE_H__
+
+#ifdef WIN32
+#include <windows.h>
+#else
+#include "Windef.h"
+#endif
+
+#include <map>
+#include <list>
+
+#include "DllExport.h"
+#include "BasePacket.h"
+#include "IBuffer.h"
+#include "Base/BaseObject.h"
+
+class ICommunication;
+
+typedef void(*RequestPacketHandle) (IPacketBuffer* Buffer, DWORD Id, ICommunication* Param);
+
+typedef void(*EndHandle) (ICommunication* Param);
+
+class DLL_COMMONLIB_API ICommunication : public virtual CBaseObject
+{
+public:
+    virtual BOOL WINAPI StartCommunication() = 0;
+
+    virtual VOID WINAPI StopCommunication() = 0;
+
+    virtual BOOL WINAPI RegisterEndHandle(EndHandle Func) = 0;
+
+    virtual BOOL WINAPI RegisterRequestHandle(DWORD Type, RequestPacketHandle Func) = 0;
+
+    virtual BOOL WINAPI SendRequest(DWORD Type, IPacketBuffer* Buffer, HANDLE DoneEvent) = 0;
+
+    virtual BOOL WINAPI SendRespone(DWORD Type, IPacketBuffer* Buffer, WORD Id, HANDLE DoneEvent) = 0;
+
+    virtual BOOL WINAPI SendRequestWithRespone(DWORD Type, IPacketBuffer* Buffer, IPacketBuffer** Reply, HANDLE DoneEvent) = 0;
+
+    virtual VOID WINAPI CancelIO() = 0;
+
+    virtual DWORD WINAPI GetSendBufferLength() = 0;
+
+protected:
+
+    virtual IPacketBuffer* RecvAPacket(HANDLE StopEvent) = 0;
+
+    virtual BOOL SendAPacket(IPacketBuffer* Buffer, HANDLE StopEvent) = 0;
+};
+
+#endif

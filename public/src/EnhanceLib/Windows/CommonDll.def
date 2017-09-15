@@ -1,0 +1,39 @@
+﻿LIBRARY         EnhanceLib
+EXPORTS
+		CreateIBufferInstance
+		CreateIBufferInstanceEx
+		CreateIBufferInstanceEx2
+
+		CreateIThreadInstance
+		CreateIThreadInstanceEx
+
+		CreateIFileIniInstance
+
+		CreateICacheInstance
+
+		CreateIPipeClientInstance
+		CreateIPipeServerServiceInstance
+
+		CreateISocketClientInstance
+		CreateISocketServerServiceInstance
+
+		ServiceMain
+
+		RegOpReadDwordA
+		RegOpReadDwordW
+		RegOpReadStringW
+		RegOpReadStringA
+		RegOpReadMultiStringA
+		RegOpReadMultiStringW
+		RegOpWriteDwordA
+		RegOpWriteDwordW
+		RegOpWriteStringA
+		RegOpWriteStringW
+		RegOpReadBinaryA
+		RegOpReadBinaryW
+
+		CreateGlobalEventW
+		CreateGlobalEventA
+		CreateGlobalAutoEventA
+		CreateGlobalAutoEventW
+

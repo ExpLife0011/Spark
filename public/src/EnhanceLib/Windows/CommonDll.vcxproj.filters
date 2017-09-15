@@ -1,0 +1,225 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Interface">
+      <UniqueIdentifier>{7169d8d1-c2d9-4afc-b815-0d7c64eca436}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interface\Pipe">
+      <UniqueIdentifier>{06826978-d8c6-4ec5-9199-9cb864fbd8f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interface\Service">
+      <UniqueIdentifier>{bab08741-6705-45f2-83d1-f74134528dda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interface\Communication">
+      <UniqueIdentifier>{18b8d350-b5b0-45bc-8753-250692d1c420}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interface\Base">
+      <UniqueIdentifier>{46c434ef-cd45-4668-826a-6a055e9a64c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib">
+      <UniqueIdentifier>{2de493c7-124b-4a88-8673-c05e2e5a6ed8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib\Service">
+      <UniqueIdentifier>{efc8d376-4719-442c-b74a-0c36439fd7c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib\Pipe">
+      <UniqueIdentifier>{c82401fe-8cb4-491b-9423-a21e45e20968}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib\Base">
+      <UniqueIdentifier>{f92a4600-ebb5-45b6-a4b3-1b06f82e6ce7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib\Communication">
+      <UniqueIdentifier>{b501bbbf-402a-45e0-ba9a-e4919c956b8c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib\Socket">
+      <UniqueIdentifier>{4292a0e7-fca7-4a73-a392-81a8e98cf73c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interface\Socket">
+      <UniqueIdentifier>{bdd785b3-a308-4939-8deb-f3b2a8625a8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Lib\Log">
+      <UniqueIdentifier>{441ae6a6-bbab-4410-a8b6-18be37fecd9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interface\Log">
+      <UniqueIdentifier>{71cc10f9-f355-40e4-8bb1-293b3dff5ec9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Common\BasePacket.h">
+      <Filter>Interface\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Common\IBuffer.h">
+      <Filter>Interface\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Common\IThread.h">
+      <Filter>Interface\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\DllExport.h" />
+    <ClInclude Include="stdafx.h">
+      <Filter>Lib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Thread.h">
+      <Filter>Lib\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Buffer.h">
+      <Filter>Lib\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Common\ICommunication.h">
+      <Filter>Interface\Communication</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Common\ICache.h">
+      <Filter>Interface\Communication</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Common\IOpini.h">
+      <Filter>Interface\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Cache.h">
+      <Filter>Lib\Communication</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Communication.h">
+      <Filter>Lib\Communication</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\Opini.h">
+      <Filter>Lib\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Windows\IPipeClient.h">
+      <Filter>Interface\Pipe</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Windows\IPipeServer.h">
+      <Filter>Interface\Pipe</Filter>
+    </ClInclude>
+    <ClInclude Include="PipeHelper.h">
+      <Filter>Lib\Pipe</Filter>
+    </ClInclude>
+    <ClInclude Include="PipeClient.h">
+      <Filter>Lib\Pipe</Filter>
+    </ClInclude>
+    <ClInclude Include="PipeServer.h">
+      <Filter>Lib\Pipe</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Windows\IService.h">
+      <Filter>Interface\Service</Filter>
+    </ClInclude>
+    <ClInclude Include="Service.h">
+      <Filter>Lib\Service</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Windows\RegOperation.h">
+      <Filter>Interface\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Socket\SocketClient.h">
+      <Filter>Lib\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Socket\SocketServer.h">
+      <Filter>Lib\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Socket\SocketHelper.h">
+      <Filter>Lib\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Socket\SocketBase.h">
+      <Filter>Lib\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Socket\ISocketClient.h">
+      <Filter>Interface\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Socket\ISocketServer.h">
+      <Filter>Interface\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Socket\ISocketBase.h">
+      <Filter>Interface\Socket</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Log\ClientLogEx.h">
+      <Filter>Interface\Log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Log\LibLogEx.h">
+      <Filter>Interface\Log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Log\LogEx.h">
+      <Filter>Interface\Log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Log\LogExBase.h">
+      <Filter>Interface\Log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Log\ServerLogEx.h">
+      <Filter>Interface\Log</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Windows\GlobalEvent.h">
+      <Filter>Interface\Base</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\Common\IBuffer.cpp">
+      <Filter>Interface\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\IThread.cpp">
+      <Filter>Interface\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="DllMain.cpp" />
+    <ClCompile Include="..\Common\Buffer.cpp">
+      <Filter>Lib\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Thread.cpp">
+      <Filter>Lib\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\ICache.cpp">
+      <Filter>Interface\Communication</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Cache.cpp">
+      <Filter>Lib\Communication</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Communication.cpp">
+      <Filter>Lib\Communication</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\IOpini.cpp">
+      <Filter>Interface\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Common\Opini.cpp">
+      <Filter>Lib\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="PipeHelper.cpp">
+      <Filter>Lib\Pipe</Filter>
+    </ClCompile>
+    <ClCompile Include="PipeInterface.cpp">
+      <Filter>Lib\Pipe</Filter>
+    </ClCompile>
+    <ClCompile Include="PipeClient.cpp">
+      <Filter>Lib\Pipe</Filter>
+    </ClCompile>
+    <ClCompile Include="PipeServer.cpp">
+      <Filter>Lib\Pipe</Filter>
+    </ClCompile>
+    <ClCompile Include="Service.cpp">
+      <Filter>Lib\Service</Filter>
+    </ClCompile>
+    <ClCompile Include="IService.cpp">
+      <Filter>Interface\Service</Filter>
+    </ClCompile>
+    <ClCompile Include="RegOperation.cpp">
+      <Filter>Lib\Base</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Socket\SocketServer.cpp">
+      <Filter>Lib\Socket</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Socket\SocketClient.cpp">
+      <Filter>Lib\Socket</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Socket\SocketHelper.cpp">
+      <Filter>Lib\Socket</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Socket\SocketBase.cpp">
+      <Filter>Lib\Socket</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Socket\SocketInterface.cpp">
+      <Filter>Lib\Socket</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Log\LogExBase.cpp">
+      <Filter>Lib\Log</Filter>
+    </ClCompile>
+    <ClCompile Include="GlobalEvent.cpp">
+      <Filter>Lib\Base</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CommonDll.def" />
+    <None Include="CommonDll_x64.def" />
+  </ItemGroup>
+</Project>
