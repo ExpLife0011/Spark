@@ -238,9 +238,6 @@
     <None Include="CommonDll_x64.def" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\CTLogEx\CTLogEx.vcxproj">
-      <Project>{fc01aec6-35f7-4bcc-b2e7-50ff2e33488f}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\Base\BaseObject.vcxproj">
       <Project>{63c25cb7-ba57-4c3f-85bf-30ab32c7c512}</Project>
     </ProjectReference>
