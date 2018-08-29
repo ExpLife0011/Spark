@@ -6,6 +6,7 @@
 #include "Common/Communication.h"
 #include "Windows/IPipeServer.h"
 #include "DllExport.h"
+#include <map>
 
 class CPipeServer : public IPipeServer, public CCommunication
 {
@@ -20,10 +21,6 @@ public:
 
     virtual BOOL WINAPI IsConnected();
 
-    virtual PVOID WINAPI GetParam();
-
-	virtual VOID WINAPI SetParam(PVOID Param);
-
 private:
     virtual IPacketBuffer* RecvAPacket(HANDLE StopEvent);
 
@@ -31,9 +28,7 @@ private:
 
     static void PipeClear(ICommunication* param);
 
-    BOOL   m_bAlive;
     HANDLE m_hPipe;
-    PVOID  m_pParam;
 };
 
 class CPipeServerService : public IPipeServerService
@@ -49,27 +44,35 @@ public:
 
     virtual BOOL WINAPI RegisterRequestHandle(DWORD Type, RequestPacketHandle Func);
 
+    virtual BOOL WINAPI RegisterRequestHandle(DWORD Type, RequestDataHandle Func);
+
     virtual void WINAPI RegisterEndHandle(EndHandle Func);
 
-    virtual VOID WINAPI SetParam(PVOID Param);
+    virtual void WINAPI RegisterConnectHandle(ConnectHandle Func);
+
+    virtual VOID WINAPI SetParam(const CHAR* ParamKeyword, CBaseObjPtr<CBaseObject> Param);
 
 private:
     static BOOL ServiceMainThreadProc(LPVOID Parameter, HANDLE StopEvent);
+    
+    static VOID ServiceMainThreadEndProc(LPVOID Parameter);
     
     void InitalizeServer(CPipeServer* Server);
 
     void InitSyncLock();
 
-    IThread*                             m_pMainThread;
+    IThread*                                         m_pMainThread;
 
-    TCHAR*                               m_szPipeName;
-    DWORD                                m_dwTimeout;
-    HANDLE                               m_hStopEvent;
-    CRITICAL_SECTION                     m_csLock;
-    std::map<DWORD, RequestPacketHandle> m_ReqPacketList;
-    std::list<EndHandle>                 m_EndList;
-    PVOID                                m_pParam;
-    HANDLE                               m_hSyncLocker;
+    TCHAR*                                           m_szPipeName;
+    DWORD                                            m_dwTimeout;
+    HANDLE                                           m_hStopEvent;
+    CRITICAL_SECTION                                 m_csLock;
+    std::map<DWORD, RequestPacketHandle>             m_ReqPacketList;
+    std::map<DWORD, RequestDataHandle>               m_ReqDataList;
+    std::list<EndHandle>                             m_EndList;
+    std::list<ConnectHandle>                         m_ConnectList;
+    std::map<UINT32, CBaseObjPtr<CBaseObject>>       m_ParamMap;
+    HANDLE                                           m_hSyncLocker;
 };
 
 #endif

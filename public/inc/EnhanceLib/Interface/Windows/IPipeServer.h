@@ -6,8 +6,9 @@
 #include <Windows.h>
 #include "Common/ICommunication.h"
 #include "DllExport.h"
+#include "Base/ParamSet.h"
 
-class DLL_COMMONLIB_API IPipeServer : public virtual ICommunication
+class DLL_COMMONLIB_API IPipeServer : public virtual ICommunication, public virtual CParamSet
 {
 public:
     virtual BOOL WINAPI Start() = 0;
@@ -15,10 +16,6 @@ public:
     virtual void WINAPI Stop() = 0;
 
     virtual BOOL WINAPI IsConnected() = 0;
-
-    virtual PVOID WINAPI GetParam() = 0;
-
-	virtual VOID WINAPI SetParam(PVOID Param) = 0;
 };
 
 class DLL_COMMONLIB_API IPipeServerService : public virtual CBaseObject
@@ -30,9 +27,13 @@ public:
 
     virtual BOOL WINAPI RegisterRequestHandle(DWORD Type, RequestPacketHandle Func) = 0;
 
+    virtual BOOL WINAPI RegisterRequestHandle(DWORD Type, RequestDataHandle Func) = 0;
+
     virtual void WINAPI RegisterEndHandle(EndHandle Func) = 0;
 
-    virtual VOID WINAPI SetParam(PVOID Param) = 0;
+    virtual void WINAPI RegisterConnectHandle(ConnectHandle Func) = 0;
+
+    virtual VOID WINAPI SetParam(const CHAR* ParamKeyword, CBaseObjPtr<CBaseObject> Param) = 0;
 };
 
 extern "C" 

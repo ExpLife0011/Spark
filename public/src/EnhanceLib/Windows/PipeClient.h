@@ -5,6 +5,7 @@
 
 #include "Windows/IPipeClient.h"
 #include "Common/Communication.h"
+#include "Base/BaseObjPtr.h"
 
 class CPipeClient : public IPipeClient, public CCommunication
 {
@@ -19,10 +20,6 @@ public:
     
     virtual BOOL WINAPI IsConnected();
 
-    virtual PVOID WINAPI GetParam();
-
-	virtual VOID WINAPI SetParam(PVOID Param);
-
 private:
     virtual IPacketBuffer* RecvAPacket(HANDLE StopEvent);
 
@@ -32,11 +29,9 @@ private:
 
     HANDLE InitSyncLock();
     
-    HANDLE m_hPipe;
-    TCHAR* m_szPipeName;
-    DWORD  m_dwTimeout;
-	PVOID  m_pParam;
-    BOOL   m_bAlive;
+    HANDLE                                     m_hPipe;
+    TCHAR*                                     m_szPipeName;
+    DWORD                                      m_dwTimeout;
 };
 
 #endif

@@ -2,8 +2,11 @@
 #include "Windows/PipeHelper.h"
 #include "Windows/PipeClient.h"
 #include "Common/Buffer.h"
+#include <stdint.h>
 
-CPipeClient::CPipeClient(TCHAR *pipename, DWORD timeout) : CCommunication()
+extern uint32_t SuperFastHash(const char * data, int len, int nStep);
+
+CPipeClient::CPipeClient(TCHAR *pipename, DWORD timeout) : CCommunication(), CParamSet()
 {
 #ifdef UNICODE
     m_szPipeName = wcsdup(pipename);
@@ -12,14 +15,22 @@ CPipeClient::CPipeClient(TCHAR *pipename, DWORD timeout) : CCommunication()
 #endif
     m_dwTimeout = timeout;
     m_hPipe = INVALID_HANDLE_VALUE;
-    m_bAlive = FALSE;
-	m_pParam = NULL;
 }
 
 CPipeClient::~CPipeClient()
 {
-    DisConnect();
+    std::map<UINT32, CBaseObjPtr<CBaseObject>>::iterator Itor;
+    std::list<CBaseObjPtr<CBaseObject>> TmpList;
+    std::list<CBaseObjPtr<CBaseObject>>::iterator TmpListItor;
+
     free(m_szPipeName);
+
+    if (m_hPipe != INVALID_HANDLE_VALUE)
+    {
+        DisconnectNamedPipe(m_hPipe);
+        CloseHandle(m_hPipe);
+        m_hPipe = INVALID_HANDLE_VALUE;
+    }
 }
 
 HANDLE CPipeClient::InitSyncLock()
@@ -48,13 +59,13 @@ BOOL CPipeClient::Connect()
     int retry = 0;
 
     SetLastError(ERROR_SUCCESS);
-    //防止重复连接
+
     if (IsConnected())
     {
         return FALSE;
     }
 
-connect:   
+connect:
     HANDLE hSyncEvent = InitSyncLock();
     if (hSyncEvent)
     {
@@ -74,13 +85,10 @@ connect:
         m_hPipe = PipeConnect(m_szPipeName, m_dwTimeout);
     }
 
-
     if (m_hPipe != INVALID_HANDLE_VALUE)
     {
         RegisterEndHandle(CPipeClient::PipeClear);
-        
         StartCommunication();
-        m_bAlive = TRUE;
 
         return TRUE;
     }
@@ -95,90 +103,58 @@ connect:
             }
         }
     }
-    
+
     return FALSE;
 }
 
 void CPipeClient::DisConnect()
 {
-    m_bAlive = FALSE;
-    
     StopCommunication();
-
-    if (IsConnected())
-    {
-        PipeDisconnect(m_hPipe);
-        m_hPipe = INVALID_HANDLE_VALUE;
-    }
 }
 
-//客户端是否连接
 BOOL CPipeClient::IsConnected()
 {
     return (m_hPipe != INVALID_HANDLE_VALUE);
 }
 
-//接受线程结束清理函数
 void CPipeClient::PipeClear(ICommunication* param)
 {
     CPipeClient *Pipe = dynamic_cast<CPipeClient *>(param);
-    
-    //如果对象未激活，就啥都不干
-    if (Pipe->m_bAlive)
+
+    if (Pipe)
     {
         Pipe->StopCommunication();
-        //断开PIPE
-        PipeDisconnect(Pipe->m_hPipe);
-        //清理PIPE信息
-        Pipe->m_hPipe = INVALID_HANDLE_VALUE;
-        Pipe->m_bAlive = FALSE;
     }
 }
 
-//同步接受一个数据包
 IPacketBuffer* CPipeClient::RecvAPacket(HANDLE StopEvent)
 {
-	IPacketBuffer* Buffer;
-    //清空LastError
+    IPacketBuffer* Buffer;
     SetLastError(ERROR_SUCCESS);
 
     if (!IsConnected())
     {
-        //LastError未连接
         SetLastError(ERROR_BUSY);
         return NULL;
     }
 
     Buffer = PipeRecvAPacket(m_hPipe, INFINITE, StopEvent);
 
-	return Buffer;
+    return Buffer;
 }
 
-//同步发送一个数据包
 BOOL CPipeClient::SendAPacket(IPacketBuffer* Buffer, HANDLE StopEvent)
 {
-	BOOL ReturnValue;
-    //清空LastError
+    BOOL ReturnValue;
     SetLastError(ERROR_SUCCESS);
 
     if (!IsConnected())
     {
-        //LastError未连接
         SetLastError(ERROR_BUSY);
         return FALSE;
     }
 
     ReturnValue = PipeWriteNBytes(m_hPipe, Buffer->GetData(), Buffer->GetBufferLength(), INFINITE, StopEvent);
-    
-	return ReturnValue;
-}
 
-PVOID CPipeClient::GetParam()
-{
-	return m_pParam;
-}
-
-VOID CPipeClient::SetParam(PVOID Param)
-{
-	m_pParam = Param;
+    return ReturnValue;
 }

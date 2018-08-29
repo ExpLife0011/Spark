@@ -14,7 +14,6 @@
 
 #include "Common/ICommunication.h"
 #include "Common/IThread.h"
-#include "Base/BaseObject.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,11 +26,11 @@ extern "C" {
 #define HDR_DIRECT_RESP 0x1
 
 typedef struct {
-    WORD  Flags;
-    WORD  Id;
+    DWORD Flags;
     DWORD Type;
+    DWORD Id;
     DWORD Len;
-    BYTE  Data[1];
+    BYTE  Data[0];
 } DataHdr;
 
 typedef struct 
@@ -68,9 +67,15 @@ public:
 
     virtual BOOL WINAPI RegisterRequestHandle(DWORD Type, RequestPacketHandle Func);
 
-    virtual BOOL WINAPI SendRequest(DWORD Type, IPacketBuffer* Buffer, HANDLE DoneEvent);
+    virtual BOOL WINAPI RegisterRequestHandle(DWORD Type, RequestDataHandle Func);
 
-    virtual BOOL WINAPI SendRespone(DWORD Type, IPacketBuffer* Buffer, WORD Id, HANDLE DoneEvent);
+    virtual BOOL WINAPI SendRequest(DWORD Type, PBYTE Data, DWORD DataLen, HANDLE DoneEvent = NULL);
+
+    virtual BOOL WINAPI SendRequest(DWORD Type, IPacketBuffer* Buffer, HANDLE DoneEvent = NULL);
+
+    virtual BOOL WINAPI SendRespone(DWORD Type, PBYTE Data, DWORD DataLen, DWORD Id, HANDLE DoneEvent = NULL);
+
+    virtual BOOL WINAPI SendRespone(DWORD Type, IPacketBuffer* Buffer, DWORD Id, HANDLE DoneEvent = NULL);
 
     virtual BOOL WINAPI SendRequestWithRespone(DWORD Type, IPacketBuffer* Buffer, IPacketBuffer** Reply, HANDLE DoneEvent);
 
@@ -89,10 +94,11 @@ private:
 
     void SendPacket(IPacketBuffer* Buffer, HANDLE DoneEvent);
     
-    IThread*                             m_pRecvThread;
-    IThread*                             m_pSendThread;
+    CBaseObjPtr<IThread>                 m_spRecvThread;
+    CBaseObjPtr<IThread>                 m_spSendThread;
     WORD                                 m_dwRequestId;
     std::map<DWORD, RequestPacketHandle> m_ReqPacketList;
+    std::map<DWORD, RequestDataHandle>   m_ReqDataList;
     std::map<DWORD, WaitResponeNode*>    m_WaitRespNodeList;
     std::list<EndHandle>                 m_EndList;
     std::list<SendNode>                  m_SendList;

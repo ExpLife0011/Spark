@@ -211,25 +211,30 @@ IPacketBuffer* PipeRecvAPacket(
     HANDLE StopEvent)
 {
     IPacketBuffer*   Packet;
-    BASE_PACKET_T    Header;
+    BASE_PACKET_T*   Header = NULL;
 
     if (PipeHandle == INVALID_HANDLE_VALUE)
     {
         return NULL;
     }
 
-    if (PipeReadNBytes(PipeHandle, (BYTE *)&Header, sizeof(BASE_PACKET_T), Timeout, StopEvent) == FALSE )
+    Header = (BASE_PACKET_T*)malloc(sizeof(BASE_PACKET_T));
+    memset(Header, 0, sizeof(BASE_PACKET_T));
+
+    if (PipeReadNBytes(PipeHandle, (BYTE *)Header, sizeof(BASE_PACKET_T), Timeout, StopEvent) == FALSE )
     {
+        free(Header);
         return NULL;
     }
 
-    Packet = (IPacketBuffer*)CreateIBufferInstance(Header.Length - sizeof(BASE_PACKET_T));
+    Packet = (IPacketBuffer*)CreateIBufferInstance(Header->Length - sizeof(BASE_PACKET_T));
 
-	if (Header.Length > sizeof(BASE_PACKET_T))
+	if (Header->Length > sizeof(BASE_PACKET_T))
     {
         if (PipeReadNBytes(PipeHandle, (BYTE *)Packet->GetData(), Packet->GetBufferLength(), Timeout, StopEvent) == FALSE )
         {
             Packet->Release();
+            free(Header);
 	        return NULL;
         }
     }
@@ -237,10 +242,12 @@ IPacketBuffer* PipeRecvAPacket(
     if (Packet->DataPush(sizeof(BASE_PACKET_T)) == FALSE)
     {
         Packet->Release();
+        free(Header);
 	    return NULL;
     }
 
     memcpy(Packet->GetData(), &Header, sizeof(BASE_PACKET_T));
+    free(Header);
 
     return Packet;
 }

@@ -147,7 +147,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <ModuleDefinitionFile>CommonDll.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>EnhanceDll.def</ModuleDefinitionFile>
       <AdditionalDependencies>Ws2_32.lib;wtsapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -167,7 +167,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <ModuleDefinitionFile>CommonDll_x64.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>EnhanceDll_x64.def</ModuleDefinitionFile>
       <AdditionalDependencies>Ws2_32.lib;wtsapi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -179,11 +179,8 @@
     <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Common\IOpini.h" />
     <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Common\IThread.h" />
     <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\DllExport.h" />
-    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Log\ClientLogEx.h" />
-    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Log\LibLogEx.h" />
     <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Log\LogEx.h" />
     <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Log\LogExBase.h" />
-    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Log\ServerLogEx.h" />
     <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Socket\ISocketBase.h" />
     <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Socket\ISocketClient.h" />
     <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Socket\ISocketServer.h" />
@@ -197,6 +194,7 @@
     <ClInclude Include="..\Common\Communication.h" />
     <ClInclude Include="..\Common\Opini.h" />
     <ClInclude Include="..\Common\Thread.h" />
+    <ClInclude Include="..\Log\log.h" />
     <ClInclude Include="..\Socket\SocketBase.h" />
     <ClInclude Include="..\Socket\SocketClient.h" />
     <ClInclude Include="..\Socket\SocketHelper.h" />
@@ -217,6 +215,7 @@
     <ClCompile Include="..\Common\IThread.cpp" />
     <ClCompile Include="..\Common\Opini.cpp" />
     <ClCompile Include="..\Common\Thread.cpp" />
+    <ClCompile Include="..\Log\log.cpp" />
     <ClCompile Include="..\Log\LogExBase.cpp" />
     <ClCompile Include="..\Socket\SocketBase.cpp" />
     <ClCompile Include="..\Socket\SocketClient.cpp" />
@@ -234,8 +233,8 @@
     <ClCompile Include="Service.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="CommonDll.def" />
-    <None Include="CommonDll_x64.def" />
+    <None Include="EnhanceDll.def" />
+    <None Include="EnhanceDll_x64.def" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Base\BaseObject.vcxproj">

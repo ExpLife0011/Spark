@@ -14,7 +14,7 @@ public:
 
     virtual ~CThread(void);
 public:
-    virtual void WINAPI StartMainThread();
+    virtual BOOL WINAPI StartMainThread();
     virtual void WINAPI StopMainThread();
     virtual BOOL WINAPI IsMainThreadRunning();
 

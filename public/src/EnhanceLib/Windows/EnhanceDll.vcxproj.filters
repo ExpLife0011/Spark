@@ -127,23 +127,17 @@
     <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Socket\ISocketBase.h">
       <Filter>Interface\Socket</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Log\ClientLogEx.h">
-      <Filter>Interface\Log</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Log\LibLogEx.h">
-      <Filter>Interface\Log</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Log\LogEx.h">
       <Filter>Interface\Log</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Log\LogExBase.h">
       <Filter>Interface\Log</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Log\ServerLogEx.h">
-      <Filter>Interface\Log</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\inc\EnhanceLib\Interface\Windows\GlobalEvent.h">
       <Filter>Interface\Base</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Log\log.h">
+      <Filter>Lib\Log</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -217,9 +211,12 @@
     <ClCompile Include="GlobalEvent.cpp">
       <Filter>Lib\Base</Filter>
     </ClCompile>
+    <ClCompile Include="..\Log\log.cpp">
+      <Filter>Lib\Log</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="CommonDll.def" />
-    <None Include="CommonDll_x64.def" />
+    <None Include="EnhanceDll.def" />
+    <None Include="EnhanceDll_x64.def" />
   </ItemGroup>
 </Project>

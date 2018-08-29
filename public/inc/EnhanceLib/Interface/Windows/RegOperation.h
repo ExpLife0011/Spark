@@ -13,14 +13,14 @@
 #define RegOpWriteDword         RegOpWriteDwordW
 #define RegOpWriteString        RegOpWriteStringW
 #define RegOpReadMultiString    RegOpReadMultiStringW
-#define ReadOpBinary            ReadOpBinaryW
+#define ReadOpReadBinary        ReadOpReadBinaryW
 #else
 #define RegOpReadDword          RegOpReadDwordA
 #define RegOpReadString         RegOpReadStringA
 #define RegOpWriteDword         RegOpWriteDwordA
 #define RegOpWriteString        RegOpWriteStringA
 #define RegOpReadMultiString    RegOpReadMultiStringA
-#define ReadOpBinary            ReadOpBinaryA
+#define ReadOpReadBinary        ReadOpReadBinaryA
 #endif
 
 extern "C"
@@ -93,14 +93,14 @@ extern "C"
         WCHAR *Buffer,
         DWORD *Length);
 
-    DLL_COMMONLIB_API BOOL WINAPI ReadOpBinaryA(
+    DLL_COMMONLIB_API BOOL WINAPI RegOpReadBinaryA(
         HKEY hKey,
         const CHAR *subkeyname,
         const CHAR *valueName,
         BYTE **val,
         int *vallen);
 
-    DLL_COMMONLIB_API BOOL WINAPI ReadOpBinaryW(
+    DLL_COMMONLIB_API BOOL WINAPI RegOpReadBinaryW(
         HKEY hKey,
         const WCHAR *subkeyname,
         const WCHAR *valueName,

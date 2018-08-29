@@ -3,22 +3,22 @@
 #include "Windows/PipeHelper.h"
 #include "Common/Buffer.h"
 #include "Windows/GlobalEvent.h"
+#include <stdint.h>
+#include "Base/SuperHash.h"
 
-CPipeServer::CPipeServer(HANDLE Pipe) : CCommunication()
+CPipeServer::CPipeServer(HANDLE Pipe) : CCommunication(), CParamSet()
 {
     m_hPipe  = Pipe;
-    m_bAlive = FALSE;
-    m_pParam = NULL;
 }
 
 CPipeServer::~CPipeServer()
 {
 	if (m_hPipe != INVALID_HANDLE_VALUE)
 	{
-		PipeDisconnect(m_hPipe);
+        DisconnectNamedPipe(m_hPipe);
+        CloseHandle(m_hPipe);
         m_hPipe = INVALID_HANDLE_VALUE;
 	}
-
 }
 
 BOOL CPipeServer::Start()
@@ -27,25 +27,15 @@ BOOL CPipeServer::Start()
     {
         RegisterEndHandle(CPipeServer::PipeClear);
         StartCommunication();
-        m_bAlive = TRUE;
         return TRUE;
     }
 
     return FALSE;
 }
 
-//停止通信
 void CPipeServer::Stop()
 {
-    m_bAlive = FALSE;
-
     StopCommunication();
-
-    if (IsConnected())
-    {
-		PipeDisconnect(m_hPipe);
-        m_hPipe = INVALID_HANDLE_VALUE;
-    }
 }
 
 BOOL CPipeServer::IsConnected()
@@ -56,15 +46,9 @@ BOOL CPipeServer::IsConnected()
 void CPipeServer::PipeClear(ICommunication* param)
 {
     CPipeServer *Pipe = dynamic_cast<CPipeServer*>(param);
-    if (Pipe->m_bAlive)
+    if (Pipe)
     {
         Pipe->StopCommunication();
-        DisconnectNamedPipe(Pipe->m_hPipe); 
-        CloseHandle(Pipe->m_hPipe);
-        Pipe->m_hPipe = INVALID_HANDLE_VALUE;
-        Pipe->m_bAlive = FALSE;
-
-        //relase self
         Pipe->Release();
     }
 }
@@ -97,16 +81,6 @@ BOOL CPipeServer::SendAPacket(IPacketBuffer* Buffer, HANDLE StopEvent)
 	return ReturnValue;
 }
 
-PVOID CPipeServer::GetParam()
-{
-	return m_pParam;
-}
-
-VOID CPipeServer::SetParam(PVOID Param)
-{
-	m_pParam = Param;
-}
-
 CPipeServerService::CPipeServerService(TCHAR* PipeName, DWORD Timeout, HANDLE StopEvent) : CBaseObject()
 {
 #ifdef UNICODE
@@ -120,8 +94,8 @@ CPipeServerService::CPipeServerService(TCHAR* PipeName, DWORD Timeout, HANDLE St
     m_hStopEvent = StopEvent;
     m_dwTimeout = Timeout;
 
-    AddRef();
-    m_pMainThread = CreateIThreadInstance(CPipeServerService::ServiceMainThreadProc, this);
+    m_pMainThread = CreateIThreadInstanceEx(CPipeServerService::ServiceMainThreadProc, this,
+        CPipeServerService::ServiceMainThreadEndProc, this);
 
     InitializeCriticalSection(&m_csLock);
 }
@@ -129,6 +103,10 @@ CPipeServerService::CPipeServerService(TCHAR* PipeName, DWORD Timeout, HANDLE St
 //析构函数
 CPipeServerService::~CPipeServerService()
 {
+    std::map<UINT32, CBaseObjPtr<CBaseObject>>::iterator Itor;
+    std::list<CBaseObjPtr<CBaseObject>> TmpList;
+    std::list<CBaseObjPtr<CBaseObject>>::iterator TmpListItor;
+
     StopMainService();
 
     m_pMainThread->Release();
@@ -142,6 +120,25 @@ CPipeServerService::~CPipeServerService()
     }
 
     free(m_szPipeName);
+
+    EnterCriticalSection(&m_csLock);
+    for (Itor = m_ParamMap.begin(); Itor != m_ParamMap.end(); Itor++)
+    {
+        if (Itor->second != NULL)
+        {
+            TmpList.push_back(Itor->second);
+            Itor->second = NULL;
+        }
+    }
+    m_ParamMap.clear();
+    LeaveCriticalSection(&m_csLock);
+
+    for (TmpListItor = TmpList.begin(); TmpListItor != TmpList.end(); TmpListItor++)
+    {
+        (*TmpListItor) = NULL;
+    }
+
+    TmpList.clear();
     DeleteCriticalSection(&m_csLock);
 }
 
@@ -169,7 +166,11 @@ void CPipeServerService::InitSyncLock()
 
 BOOL CPipeServerService::StartMainService()
 {
-    m_pMainThread->StartMainThread();
+    if (!m_pMainThread->IsMainThreadRunning())
+    {
+        AddRef();
+        m_pMainThread->StartMainThread();
+    }
     
     return TRUE;
 }
@@ -182,17 +183,34 @@ void CPipeServerService::StopMainService()
     }
 }
 
-//注册请求的处理函数
 BOOL CPipeServerService::RegisterRequestHandle(DWORD Type, RequestPacketHandle Func)
 {
     EnterCriticalSection(&m_csLock);
-    if (m_ReqPacketList.find(Type) != m_ReqPacketList.end())
+    if ((m_ReqPacketList.find(Type) != m_ReqPacketList.end())
+        || (m_ReqDataList.find(Type) != m_ReqDataList.end()))
     {
         return FALSE;
     }
     else
     {
         m_ReqPacketList[Type] = Func;
+    }
+    LeaveCriticalSection(&m_csLock);
+
+    return TRUE;
+}
+
+BOOL CPipeServerService::RegisterRequestHandle(DWORD Type, RequestDataHandle Func)
+{
+    EnterCriticalSection(&m_csLock);
+    if ((m_ReqPacketList.find(Type) != m_ReqPacketList.end())
+        || (m_ReqDataList.find(Type) != m_ReqDataList.end()))
+    {
+        return FALSE;
+    }
+    else
+    {
+        m_ReqDataList[Type] = Func;
     }
     LeaveCriticalSection(&m_csLock);
 
@@ -206,21 +224,55 @@ void CPipeServerService::RegisterEndHandle(EndHandle Func)
     LeaveCriticalSection(&m_csLock);
 }
 
-VOID CPipeServerService::SetParam(PVOID Param)
+void CPipeServerService::RegisterConnectHandle(ConnectHandle Func)
 {
     EnterCriticalSection(&m_csLock);
-    m_pParam = Param;
+    m_ConnectList.push_back(Func);
     LeaveCriticalSection(&m_csLock);
+}
+
+VOID CPipeServerService::SetParam(const CHAR* ParamKeyword, CBaseObjPtr<CBaseObject> Param)
+{
+	UINT32 uHash = SuperFastHash(ParamKeyword, strlen(ParamKeyword), 1);
+   
+    EnterCriticalSection(&m_csLock);
+	m_ParamMap[uHash] = Param;
+    LeaveCriticalSection(&m_csLock);
+
+    return;
 }
 
 void CPipeServerService::InitalizeServer(CPipeServer *Server)
 {
     std::map<DWORD, RequestPacketHandle>::iterator ReqPacketIterator;
+    std::map<DWORD, RequestDataHandle>::iterator ReqDataIterator;
+    std::map<UINT32, CBaseObjPtr<CBaseObject>>::iterator ParamIterator;
+    std::list<ConnectHandle>::iterator ConnectIterator;
     std::list<EndHandle>::iterator EndIterator;
+
     EnterCriticalSection(&m_csLock);
+
+    for (ParamIterator = m_ParamMap.begin(); ParamIterator != m_ParamMap.end(); ParamIterator++)
+    {
+        Server->SetParam(ParamIterator->first, ParamIterator->second);
+    }
+
+    for (ConnectIterator = m_ConnectList.begin(); ConnectIterator != m_ConnectList.end(); ConnectIterator++)
+    {
+        if ((*ConnectIterator) != NULL)
+        {
+            (*ConnectIterator)(Server);
+        }
+    }
+
     for (ReqPacketIterator = m_ReqPacketList.begin(); ReqPacketIterator != m_ReqPacketList.end(); ReqPacketIterator++)
     {
         Server->RegisterRequestHandle(ReqPacketIterator->first, ReqPacketIterator->second);
+    }
+
+    for (ReqDataIterator = m_ReqDataList.begin(); ReqDataIterator != m_ReqDataList.end(); ReqDataIterator++)
+    {
+        Server->RegisterRequestHandle(ReqDataIterator->first, ReqDataIterator->second);
     }
 
     for (EndIterator = m_EndList.begin(); EndIterator != m_EndList.end(); EndIterator++)
@@ -228,12 +280,9 @@ void CPipeServerService::InitalizeServer(CPipeServer *Server)
         Server->RegisterEndHandle(*EndIterator);
     }
 
-    Server->SetParam(Server);
-
     LeaveCriticalSection(&m_csLock);
 }
 
-//主线程处理函数
 BOOL CPipeServerService::ServiceMainThreadProc(LPVOID Parameter, HANDLE StopEvent)
 {
     HANDLE          hPipe, hEvent; 
@@ -245,9 +294,7 @@ BOOL CPipeServerService::ServiceMainThreadProc(LPVOID Parameter, HANDLE StopEven
     BOOL  ret;
     SECURITY_ATTRIBUTES sa;
     SECURITY_DESCRIPTOR sd;
-    /*
-        * 允许所有用户连接
-        */
+
     InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION);
     SetSecurityDescriptorDacl(&sd,TRUE,NULL,FALSE);
     sa.nLength = sizeof(SECURITY_ATTRIBUTES);
@@ -308,17 +355,29 @@ BOOL CPipeServerService::ServiceMainThreadProc(LPVOID Parameter, HANDLE StopEven
 
     if (ret) {
         CPipeServer *Pipe = new CPipeServer(hPipe);
-        Service->InitalizeServer(Pipe);
-        if (!Pipe->Start())
+        if (Pipe)
         {
+            Pipe->AddRef();
+
+            Service->InitalizeServer(Pipe);
+            if (!Pipe->Start())
+            {
+                Pipe->Release();
+            }
+
             Pipe->Release();
-        } 
+        }
     } else {
         CloseHandle(hPipe);
     }
 
     CloseHandle(hEvent);
 
-    Service->Release();
     return TRUE; 
+}
+
+VOID CPipeServerService::ServiceMainThreadEndProc(LPVOID Parameter)
+{
+    CPipeServerService* Service = (CPipeServerService*)Parameter;
+    Service->Release();
 }

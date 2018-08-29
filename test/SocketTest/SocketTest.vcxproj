@@ -85,8 +85,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\public\src\EnhanceLib\Windows\CommonDll.vcxproj">
-      <Project>{902cea01-2029-4f46-b277-86b30a9d1604}</Project>
+    <ProjectReference Include="..\..\public\src\EnhanceLib\Base\BaseObject.vcxproj">
+      <Project>{63c25cb7-ba57-4c3f-85bf-30ab32c7c512}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

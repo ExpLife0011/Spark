@@ -56,16 +56,6 @@ void WINAPI CSocketBase::Close()
     }
 }
 
-PVOID WINAPI CSocketBase::GetParam()
-{
-    return m_pParam;
-}
-
-VOID WINAPI CSocketBase::SetParam(PVOID Param)
-{
-    m_pParam = Param;
-}
-
 IPacketBuffer* CSocketBase::RecvAPacket(HANDLE StopEvent)
 {
     do

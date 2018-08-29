@@ -21,7 +21,7 @@ typedef void(*ThreadEndProc)(LPVOID param);
 class DLL_COMMONLIB_API IThread : public virtual CBaseObject
 {
 public:
-    virtual void WINAPI StartMainThread() = 0;
+    virtual BOOL WINAPI StartMainThread() = 0;
 
     virtual void WINAPI StopMainThread() = 0;
 

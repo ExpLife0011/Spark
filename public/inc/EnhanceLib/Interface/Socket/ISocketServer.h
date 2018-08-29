@@ -19,11 +19,15 @@ public:
 
     virtual void WINAPI StopMainService() = 0;
 
-    virtual BOOL WINAPI RegisterRequestHandle(DWORD Type, RequestPacketHandle Func) = 0;
+    virtual BOOL WINAPI RegisterRequestHandle(DWORD Type, RequestPacketHandle Func);
 
-    virtual void WINAPI RegisterEndHandle(EndHandle Func) = 0;
+    virtual BOOL WINAPI RegisterRequestHandle(DWORD Type, RequestDataHandle Func);
 
-    virtual VOID WINAPI SetParam(PVOID Param) = 0;
+    virtual void WINAPI RegisterEndHandle(EndHandle Func);
+
+    virtual void WINAPI RegisterConnectHandle(ConnectHandle Func);
+
+    virtual VOID WINAPI SetParam(const CHAR* ParamKeyword, CBaseObjPtr<CBaseObject> Param);
 };
 
 extern "C"

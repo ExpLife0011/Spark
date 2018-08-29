@@ -10,6 +10,7 @@
 #endif
 
 #include "DllExport.h"
+#include "Base/BaseObjPtr.h"
 
 class DLL_COMMONLIB_API CBaseObject
 {

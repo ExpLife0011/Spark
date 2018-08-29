@@ -13,96 +13,43 @@
 #define MODULE_NAME (CLogEx::GetModuleName())
 #endif
 
-#ifdef WIN32
-    #ifdef UNICODE
-        #define GetModuleName GetModuleNameW
-        #define SetModuleName SetModuleNameW
-        #define LogInit       LogInitW
-    #else
-        #define GetModuleName GetModuleNameA
-        #define SetModuleName SetModuleNameA
-        #define LogInit       LogInitA
-    #endif
-#else
-    #define GetModuleName GetModuleNameA
-    #define SetModuleName SetModuleNameA
-    #define LogInit       LogInitA
-#endif
-
-#include "CTLogEx.h"
-
 #include "DllExport.h"
+#include "Log\log.h"
 
 class CLogEx
 {
 public:
-    static DLL_COMMONLIB_API void WINAPI LogInitA(CHAR* ConfigFullPath);
+    static DLL_COMMONLIB_API void WINAPI LogInit(CHAR* LogPath, DWORD Level);
 
-#ifdef WIN32
-    static DLL_COMMONLIB_API void WINAPI LogInitW(WCHAR* ConfigFullPath);
-
-    static DLL_COMMONLIB_API void WINAPI LogInitW(HMODULE DllModule, WCHAR* FileName);
-#endif
-
-    static DLL_COMMONLIB_API void WINAPI SetLogLevel(DWORD Level);
-
-    static DLL_COMMONLIB_API void WINAPI SetOutputType(DWORD Level);
-
-    static DLL_COMMONLIB_API void WINAPI AddOutputModule(DWORD Module);
-
-    static DLL_COMMONLIB_API void WINAPI RemoveOutputModule(DWORD Module);
+    static DLL_COMMONLIB_API void WINAPI LogInit(HMODULE DllModule, CHAR* FileName, DWORD level);
 
 	static DLL_COMMONLIB_API void WINAPI Dump(unsigned char* Buffer, unsigned int Length);
 
-#ifdef WIN32
-    static DLL_COMMONLIB_API void WINAPI SetModuleNameW(WCHAR* ModuleName);
+    static DLL_COMMONLIB_API void WINAPI SetModuleName(CHAR* ModuleName);
 
-    static DLL_COMMONLIB_API WCHAR* WINAPI GetModuleNameW();
-#endif
-
-    static DLL_COMMONLIB_API void WINAPI SetModuleNameA(CHAR* ModuleName);
-
-    static DLL_COMMONLIB_API CHAR* WINAPI GetModuleNameA();
-
-    static DLL_COMMONLIB_API DWORD WINAPI GetModuleMask();
+    static DLL_COMMONLIB_API CHAR* WINAPI GetModuleName();
 
     static DLL_COMMONLIB_API void WINAPI LogDone();
-
 };
 
-#define LOG_TRACE(Moduel, ...)                                                                       \
-    if (CLogEx::GetModuleMask() & (1 << Moduel)) {                                                               \
-        CTLogEx_printf(MODULE_NAME, LOG_LEVEL_TRACE, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__); \
-    }
+extern CLogWriter gLogWriter;
 
-#define LOG_DEBUG(Moduel, ...)                                                                       \
-    if (CLogEx::GetModuleMask() & (1 << Moduel)) {                                                               \
-        CTLogEx_printf(MODULE_NAME, LOG_LEVEL_DEBUG, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__); \
-    }
+#define L_TRACE(...)                                                                                 \
+        gLogWriter.Log(LOG_LEVEL_TRACE, MODULE_NAME, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__); \
 
-#define LOG_INFO(Moduel, ...)                                                                       \
-    if (CLogEx::GetModuleMask() & (1 << Moduel)) {                                                              \
-        CTLogEx_printf(MODULE_NAME, LOG_LEVEL_INFO, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__); \
-    }   
-
-#define LOG_WARN(Moduel, ...)                                                                       \
-    if (CLogEx::GetModuleMask() & (1 << Moduel)) {                                                              \
-        CTLogEx_printf(MODULE_NAME, LOG_LEVEL_WARN, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__); \
-    }   
-
-#define LOG_ERROR(Moduel, ...)                                                                       \
-    if (CLogEx::GetModuleMask() & (1 << Moduel)) {                                                               \
-        CTLogEx_printf(MODULE_NAME, LOG_LEVEL_ERROR, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__); \
-    }
-
-#define LOG_FATAL(Moduel, ...)                                                                       \
-    if (CLogEx::GetModuleMask() & (1 << Moduel)) {                                                               \
-        CTLogEx_printf(MODULE_NAME, LOG_LEVEL_FATAL, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__); \
-    }
-
+#define L_DEBUG(Moduel, ...)                                                                         \
+        gLogWriter.Log(LOG_LEVEL_DEBUG, MODULE_NAME, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__); \
+ 
+#define L_INFO(Moduel, ...)                                                                          \
+        gLogWriter.Log(LOG_LEVEL_INFO, MODULE_NAME, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__);  \
+ 
+#define L_WARN(Moduel, ...)                                                                             \
+        gLogWriter.Log(LOG_LEVEL_WARNING, MODULE_NAME, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__);  \
+ 
+#define L_ERROR(Moduel, ...)                                                                          \
+        gLogWriter.Log(LOG_LEVEL_ERROR, MODULE_NAME,  __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__); \
+ 
 #define LOG_DUMP(Module, Buffer, Length)                                                             \
-    if (gModuleMask & (1 << Module)) {                                                               \
-        CLogEx::Dump((unsigned char*)Buffer, (unsigned int)Length);                                                        \
-    }	
+        CLogEx::Dump((unsigned char*)Buffer, (unsigned int)Length);                                  \
 
 #endif

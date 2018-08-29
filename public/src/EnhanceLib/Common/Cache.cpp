@@ -76,7 +76,7 @@ BOOL CCache::Check()
     {
         BASE_PACKET_T* pkg = (BASE_PACKET_T *)m_pBufferBase;
         EnterCriticalSection(&m_csPacketListLock);
-       
+
         m_PacketList.push_back(pkg);
         LeaveCriticalSection(&m_csPacketListLock);
 

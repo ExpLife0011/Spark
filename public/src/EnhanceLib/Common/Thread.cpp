@@ -24,7 +24,7 @@ void CThread::Init(ThreadMainProc MainFunc, LPVOID MainParam, ThreadEndProc EndF
 
     m_hStopMainThreadEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     m_hMainThreadStopedEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
-    m_hMainThreadStartedEvent = NULL;
+    m_hMainThreadStartedEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     SetEvent(m_hMainThreadStopedEvent);
 
     m_bContinueMainThread = FALSE;
@@ -53,6 +53,12 @@ CThread::~CThread(void)
         m_hMainThreadStopedEvent = NULL;
     }
 
+    if (m_hMainThreadStartedEvent)
+    {
+        CloseHandle(m_hMainThreadStartedEvent);
+        m_hMainThreadStopedEvent = NULL;
+    }
+
     if (m_hMainThread)
     {
         CloseHandle(m_hMainThread);
@@ -62,18 +68,21 @@ CThread::~CThread(void)
     DeleteCriticalSection(&m_csEndLock);
 }
 
-void CThread::StartMainThread()
+BOOL CThread::StartMainThread()
 {
+    DWORD dwRet;
     ResetEvent(m_hStopMainThreadEvent);
     ResetEvent(m_hMainThreadStartedEvent);
     
-    AddRef();
     m_hMainThread = CreateThread(NULL, 0, CThread::MainThread, this, 0, &m_dwMainThreadId);
+
+	dwRet = WaitForSingleObject(m_hMainThreadStartedEvent, 5000);
+
+    return (dwRet == WAIT_OBJECT_0);
 }
 
 void CThread::StopMainThread()
 {
-    //如果线程不在运行，则回收句柄之后返回，以保证可以再次启动
     if (!IsMainThreadRunning())
     {
         if (m_hMainThread)
@@ -89,16 +98,9 @@ void CThread::StopMainThread()
     {
         return;
     }
-
-    //先破除循环
+    
     m_bContinueMainThread = FALSE;
-    //再置事件
     SetEvent(m_hStopMainThreadEvent);
-
-    //回收句柄，以保证可以再次启动
-    CloseHandle(m_hMainThread);
-    m_hMainThread = NULL;
-    m_dwMainThreadId = INVALID_THREAD_ID;
 }
 
 DWORD WINAPI CThread::MainThread(LPVOID Lp)
@@ -108,28 +110,33 @@ DWORD WINAPI CThread::MainThread(LPVOID Lp)
     pthread_detach(pthread_self());
 #endif
 
-    //通知线程已经启动
+    if (Thread)
+    {
+        Thread->AddRef();
+    }
+    else
+    {
+        return 0;
+    }
+
     ResetEvent(Thread->m_hStopMainThreadEvent);
     ResetEvent(Thread->m_hMainThreadStopedEvent);
     Thread->m_bContinueMainThread = TRUE;
     SetEvent(Thread->m_hMainThreadStartedEvent);
 
-    //主线程循环执行
     while (Thread->m_bContinueMainThread)
     {
         if (!Thread->m_fnMainProc(Thread->m_pMainProcParam, Thread->m_hStopMainThreadEvent))
         {
-            //返回false就退出
             break;
         }
     }
-    //结束函数调用
+
     EnterCriticalSection(&Thread->m_csEndLock);
     if (Thread->m_fnEndProc)
     {
         Thread->m_fnEndProc(Thread->m_pEndProcParam);
     }
-    //设置结束事件
     SetEvent(Thread->m_hMainThreadStopedEvent);
     LeaveCriticalSection(&Thread->m_csEndLock);
 
@@ -139,7 +146,6 @@ DWORD WINAPI CThread::MainThread(LPVOID Lp)
 
 BOOL CThread::IsMainThreadRunning()
 {
-    //检测stopevent是否有被置位，以此判断线程是否在运行
     DWORD ret = WaitForSingleObject(m_hMainThreadStopedEvent, 0);
     if (ret == WAIT_TIMEOUT)
     {

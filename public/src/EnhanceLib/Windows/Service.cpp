@@ -173,7 +173,6 @@ static int ServiceMainProcess(ServiceBaseInfo *service)
 {
     WORD            wVersionRequested;
     WSADATA         wsaData;
-    BOOL            bConsole = FALSE;
 
     gServiceInfo = service;
     

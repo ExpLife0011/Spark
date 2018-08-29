@@ -14,7 +14,6 @@ public:
     virtual BOOL WINAPI Start();
 
 private:
-    //release self when disconnected
     static void SelfRelease(ICommunication* param);
 };
 
@@ -31,24 +30,30 @@ public:
 
     virtual BOOL WINAPI RegisterRequestHandle(DWORD Type, RequestPacketHandle Func);
 
+    virtual BOOL WINAPI RegisterRequestHandle(DWORD Type, RequestDataHandle Func);
+
     virtual void WINAPI RegisterEndHandle(EndHandle Func);
 
-    virtual VOID WINAPI SetParam(PVOID Param);
+    virtual void WINAPI RegisterConnectHandle(ConnectHandle Func);
+
+    virtual VOID WINAPI SetParam(const CHAR* ParamKeyword, CBaseObjPtr<CBaseObject> Param);
 
 private:
     static BOOL ServiceMainThreadProc(LPVOID Parameter, HANDLE StopEvent);
 
     void InitalizeServer(CSocketServer* Server);
 
-    IThread*                             m_pMainThread;
-    CHAR                                 m_szSrcAddress[128];
-    WORD                                 m_dwSrcPort;
-    HANDLE                               m_hStopEvent;
-    CRITICAL_SECTION                     m_csLock;
-    std::map<DWORD, RequestPacketHandle> m_ReqPacketList;
-    std::list<EndHandle>                 m_EndList;
-    PVOID                                m_pParam;
-    SOCKET                               m_ListenSocket;
+    IThread*                                    m_pMainThread;
+    CHAR                                        m_szSrcAddress[128];
+    WORD                                        m_dwSrcPort;
+    HANDLE                                      m_hStopEvent;
+    CRITICAL_SECTION                            m_csLock; 
+    std::map<DWORD, RequestPacketHandle>        m_ReqPacketList;
+    std::map<DWORD, RequestDataHandle>          m_ReqDataList;
+    std::list<EndHandle>                        m_EndList;
+    std::list<ConnectHandle>                    m_ConnectList;
+    std::map<UINT32, CBaseObjPtr<CBaseObject>>  m_ParamMap;
+    SOCKET                                      m_ListenSocket;
 };
 
 #endif
