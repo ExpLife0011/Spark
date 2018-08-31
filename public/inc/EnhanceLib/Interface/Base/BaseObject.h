@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef __BASE_OBJECT_H__
-#define __BASE_OBJECT_H__
+#ifndef __ENLIB_OBJECT_H__
+#define __ENLIB_OBJECT_H__
 
 #ifdef WIN32
 #include <Windows.h>
@@ -12,16 +12,19 @@
 #include "DllExport.h"
 #include "Base/BaseObjPtr.h"
 
-class DLL_COMMONLIB_API CBaseObject
+namespace enlib
 {
-public:
-    CBaseObject();
-    virtual ~CBaseObject();
+    class DLL_COMMONLIB_API CObject
+    {
+    public:
+        CObject();
+        virtual ~CObject();
 
-    virtual LONG WINAPI AddRef();
-    virtual LONG WINAPI Release();
-private:
-    volatile LONG m_lRef;
+        virtual LONG WINAPI AddRef();
+        virtual LONG WINAPI Release();
+    private:
+        volatile LONG m_lRef;
+    };
 };
 
 #endif

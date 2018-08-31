@@ -4,48 +4,40 @@
 #include "Windows\IPipeClient.h"
 #include "Windows\IPipeServer.h"
 
-static void ClientRequestDataHandle(IPacketBuffer* Buffer, DWORD Id, ICommunication* Param)
-{
-    DWORD index = *(DWORD*)Buffer->GetData();
-    if (index % 1000 == 0)
-    {
-        wprintf(_T("Client Recv %d\r\n"), index);
-    }
+using namespace enlib;
 
-    Buffer->AddRef();
-    Param->SendRequest(0, Buffer, NULL);
-    Buffer->Release();
-}
-
-static void ServerRequestDataHandle(IPacketBuffer* Buffer, DWORD Id, ICommunication* Param)
+static void ServerRequestDataHandle(CObjPtr<IPacketBuffer> Buffer, DWORD Id, CObjPtr<ICommunication> Param)
 {
     DWORD* index = (DWORD*)Buffer->GetData();
-    if (*index % 1000 == 0)
+    if ((*index % 100) == 0)
     {
         wprintf(_T("Server Recv %d\r\n"), *index);
     }
-    (*index)++;
-
-    Param->SendRequest(1, Buffer, NULL);
 }
 
 static void ClientRun()
 {
     DWORD index = 0;
 
-    IPipeClient* Client = CreateIPipeClientInstance(_T("\\\\.\\PIPE\\TestPipe"), 1000);
-    Client->Connect();
-    Client->RegisterRequestHandle(1, ClientRequestDataHandle);
-    IPacketBuffer* Buffer = CreateIBufferInstanceEx((PBYTE)&index, sizeof(DWORD));
-    Client->SendRequest(0, Buffer, NULL);
-    Buffer->Release();
+    while (TRUE)
+    {
+        HANDLE Done = CreateEvent(NULL, TRUE, FALSE, NULL);
+        CObjPtr<IPipeClient> spClient = CreateIPipeClientInstance(_T("\\\\.\\PIPE\\TestPipe"), 1000);
+        spClient->Connect();
+        CObjPtr<IPacketBuffer> spBuffer = CreateIBufferInstanceEx((PBYTE)&index, sizeof(DWORD));
+        spClient->SendRequest(0, spBuffer, Done);
+        WaitForSingleObject(Done, INFINITE);
+        spClient->DisConnect();
+        CloseHandle(Done);
+        index++;
+    }
 }
 
 static void ServerRun()
 {
     HANDLE StopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
-    IPipeServerService* Service = CreateIPipeServerServiceInstance(_T("\\\\.\\PIPE\\TestPipe"), 1000, StopEvent);
+    CObjPtr<IPipeServerService> Service = CreateIPipeServerServiceInstance(_T("\\\\.\\PIPE\\TestPipe"), 1000, StopEvent);
     Service->RegisterRequestHandle(0, ServerRequestDataHandle);
     Service->StartMainService();
 }

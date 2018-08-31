@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#ifndef __BASE_PACKET_T_H__
-#define __BASE_PACKET_T_H__
+#ifndef __ENLIB_BASE_PACKET_T_H__
+#define __ENLIB_BASE_PACKET_T_H__
 
 #ifdef WIN32
 #include <Windows.h>

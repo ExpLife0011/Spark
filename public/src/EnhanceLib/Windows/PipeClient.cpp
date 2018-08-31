@@ -4,6 +4,8 @@
 #include "Common/Buffer.h"
 #include <stdint.h>
 
+using namespace enlib;
+
 extern uint32_t SuperFastHash(const char * data, int len, int nStep);
 
 CPipeClient::CPipeClient(TCHAR *pipename, DWORD timeout) : CCommunication(), CParamSet()
@@ -19,10 +21,6 @@ CPipeClient::CPipeClient(TCHAR *pipename, DWORD timeout) : CCommunication(), CPa
 
 CPipeClient::~CPipeClient()
 {
-    std::map<UINT32, CBaseObjPtr<CBaseObject>>::iterator Itor;
-    std::list<CBaseObjPtr<CBaseObject>> TmpList;
-    std::list<CBaseObjPtr<CBaseObject>>::iterator TmpListItor;
-
     free(m_szPipeName);
 
     if (m_hPipe != INVALID_HANDLE_VALUE)
@@ -117,33 +115,36 @@ BOOL CPipeClient::IsConnected()
     return (m_hPipe != INVALID_HANDLE_VALUE);
 }
 
-void CPipeClient::PipeClear(ICommunication* param)
+void CPipeClient::PipeClear(CObjPtr<ICommunication> param)
 {
-    CPipeClient *Pipe = dynamic_cast<CPipeClient *>(param);
+    CObjPtr<CPipeClient> spPipe = NULL;
+    spPipe = param;
 
-    if (Pipe)
+    if (spPipe)
     {
-        Pipe->StopCommunication();
+        spPipe->StopCommunication();
     }
 }
 
-IPacketBuffer* CPipeClient::RecvAPacket(HANDLE StopEvent)
+CObjPtr<IPacketBuffer> CPipeClient::RecvAPacket(HANDLE StopEvent)
 {
-    IPacketBuffer* Buffer;
+    CObjPtr<IPacketBuffer> spRet = NULL;
     SetLastError(ERROR_SUCCESS);
 
     if (!IsConnected())
     {
         SetLastError(ERROR_BUSY);
-        return NULL;
+        spRet = NULL;
+    }
+    else
+    {
+        spRet = PipeRecvAPacket(m_hPipe, INFINITE, StopEvent);
     }
 
-    Buffer = PipeRecvAPacket(m_hPipe, INFINITE, StopEvent);
-
-    return Buffer;
+    return spRet;
 }
 
-BOOL CPipeClient::SendAPacket(IPacketBuffer* Buffer, HANDLE StopEvent)
+BOOL CPipeClient::SendAPacket(CObjPtr<IPacketBuffer> Buffer, HANDLE StopEvent)
 {
     BOOL ReturnValue;
     SetLastError(ERROR_SUCCESS);

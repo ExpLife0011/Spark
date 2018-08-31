@@ -2,6 +2,8 @@
 #include "SocketClient.h"
 #include "SocketHelper.h"
 
+using namespace enlib;
+
 CSocketClient::CSocketClient(const CHAR *address, WORD port) : CSocketBase()
 {
     strncpy(m_szDstAddress, address, 128);

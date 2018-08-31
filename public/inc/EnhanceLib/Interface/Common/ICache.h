@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#ifndef __ICACHE_H__
-#define __ICACHE_H__
+#ifndef __ENLIB_ICACHE_H__
+#define __ENLIB_ICACHE_H__
 
 #ifdef WIN32
 #include <Windows.h>
@@ -14,17 +14,18 @@
 #include "BasePacket.h"
 #include "Base/BaseObject.h"
 
-class ICache : public virtual CBaseObject
+namespace enlib
 {
-public:
-    virtual BOOL WINAPI AddData(BYTE *Data, DWORD Length) = 0;
+    class ICache : public virtual CObject
+    {
+    public:
+        virtual BOOL WINAPI AddData(BYTE *Data, DWORD Length) = 0;
 
-    virtual BASE_PACKET_T* WINAPI GetPacket() = 0;
+        virtual BASE_PACKET_T* WINAPI GetPacket() = 0;
+    };
 };
 
-extern "C"
-{
-    DLL_COMMONLIB_API ICache* WINAPI CreateICacheInstance(HANDLE GetPacketEvent);
-}
+DLL_COMMONLIB_API enlib::CObjPtr<enlib::ICache> WINAPI CreateICacheInstance(HANDLE GetPacketEvent);
+
 
 #endif

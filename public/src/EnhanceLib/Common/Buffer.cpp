@@ -1,14 +1,9 @@
-﻿/**
- * @file     Buffer.cpp
- * @author   4680414@qq.com
- * @date     2017/1/25
- * @version  1.0
- * @brief    缓冲报文类源文件
- */
-#include <string.h>
+﻿#include <string.h>
 #include "Common/Buffer.h"
 
-CPacketBuffer::CPacketBuffer(DWORD Length) : CBaseObject()
+using namespace enlib;
+
+CPacketBuffer::CPacketBuffer(DWORD Length) : CObject()
 {
     m_pHead = (BYTE*)malloc(PACKET_BUFFER_HEADROOM_DEFAULT + Length + PACKET_BUFFER_TAILROOM_DEFAULT);
     m_pData = m_pHead + PACKET_BUFFER_HEADROOM_DEFAULT;
@@ -16,7 +11,7 @@ CPacketBuffer::CPacketBuffer(DWORD Length) : CBaseObject()
     m_pEnd = m_pTail + PACKET_BUFFER_TAILROOM_DEFAULT;
 }
 
-CPacketBuffer::CPacketBuffer(BYTE* Buffer, DWORD Length) : CBaseObject()
+CPacketBuffer::CPacketBuffer(BYTE* Buffer, DWORD Length) : CObject()
 {
     m_pHead = (BYTE*)malloc(PACKET_BUFFER_HEADROOM_DEFAULT + Length + PACKET_BUFFER_TAILROOM_DEFAULT);
     m_pData = m_pHead + PACKET_BUFFER_HEADROOM_DEFAULT;
@@ -26,7 +21,7 @@ CPacketBuffer::CPacketBuffer(BYTE* Buffer, DWORD Length) : CBaseObject()
     memcpy(m_pData, Buffer, Length);
 }
 
-CPacketBuffer::CPacketBuffer(BYTE* Buffer, DWORD Length, DWORD HeadRoom, DWORD TailRoom) : CBaseObject()
+CPacketBuffer::CPacketBuffer(BYTE* Buffer, DWORD Length, DWORD HeadRoom, DWORD TailRoom) : CObject()
 {
     m_pHead = (BYTE*)malloc(HeadRoom + Length + TailRoom);
     m_pData = m_pHead + HeadRoom;

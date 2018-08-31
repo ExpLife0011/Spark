@@ -1,7 +1,9 @@
 ﻿#include "stdafx.h"
 #include "Common/Cache.h"
 
-CCache::CCache(HANDLE GetPacketEvent) : CBaseObject()
+using namespace enlib;
+
+CCache::CCache(HANDLE GetPacketEvent) : CObject()
 {
     InitializeCriticalSection(&m_csPacketListLock);
     m_hGetPacketEvent = GetPacketEvent;
@@ -85,7 +87,7 @@ BOOL CCache::Check()
             SetEvent(m_hGetPacketEvent);
         }
 
-        return this->InitBuffer();
+        return InitBuffer();
     }
     return TRUE;
 }

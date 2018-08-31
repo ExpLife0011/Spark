@@ -10,27 +10,30 @@
 
 #include "Base/BaseObject.h"
 
-class CCache : public ICache
+namespace enlib
 {
-public:
-    CCache(HANDLE GetPacketEvent);
+    class CCache : public ICache
+    {
+    public:
+        CCache(HANDLE GetPacketEvent);
 
-    virtual ~CCache();
+        virtual ~CCache();
 
-    virtual BOOL WINAPI AddData(BYTE *Data, DWORD Length);
+        virtual BOOL WINAPI AddData(BYTE *Data, DWORD Length);
 
-    virtual BASE_PACKET_T* WINAPI GetPacket();
-private:
-    BOOL InitBuffer();
+        virtual BASE_PACKET_T* WINAPI GetPacket();
+    private:
+        BOOL InitBuffer();
 
-    BOOL Check();
+        BOOL Check();
 
-    BYTE*                     m_pBufferBase;
-    DWORD                     m_dwBufferLength;
-    DWORD                     m_dwDataLength;
-    HANDLE                    m_hGetPacketEvent;
-    std::list<BASE_PACKET_T*> m_PacketList;
-    CRITICAL_SECTION          m_csPacketListLock;
+        BYTE*                     m_pBufferBase;
+        DWORD                     m_dwBufferLength;
+        DWORD                     m_dwDataLength;
+        HANDLE                    m_hGetPacketEvent;
+        std::list<BASE_PACKET_T*> m_PacketList;
+        CRITICAL_SECTION          m_csPacketListLock;
+    };
 };
 
 #endif

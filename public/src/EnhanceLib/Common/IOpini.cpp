@@ -1,7 +1,20 @@
 ﻿#include "Common/IOpini.h"
 #include "Common/Opini.h"
 
-IFileIni* WINAPI CreateIFileIniInstance(const CHAR* inifile)
+using namespace enlib;
+
+CObjPtr<IFileIni> WINAPI CreateIFileIniInstance(const CHAR* inifile)
 {
-    return new CFileIni(inifile);
+    CObjPtr<IFileIni> spRet = NULL;
+    IFileIni* pIni = NULL;
+    pIni = new CFileIni(inifile);
+
+    if (pIni)
+    {
+        spRet = pIni;
+        pIni->Release();
+        pIni = NULL;
+    }
+
+    return spRet;
 }

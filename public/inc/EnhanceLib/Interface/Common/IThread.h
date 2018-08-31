@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#ifndef __ITHREAD_H__
-#define __ITHREAD_H__
+#ifndef __ENLIB_ITHREAD_H__
+#define __ENLIB_ITHREAD_H__
 
 #ifdef WIN32
 #include <Windows.h>
@@ -14,25 +14,26 @@
 #include "DllExport.h"
 #include "Base/BaseObject.h"
 
-typedef BOOL(*ThreadMainProc)(LPVOID param, HANDLE stopevent);
+typedef BOOL (*ThreadMainProc)(enlib::CObjPtr<enlib::CObject> param, HANDLE stopevent);
 
-typedef void(*ThreadEndProc)(LPVOID param);
+typedef void (*ThreadEndProc)(enlib::CObjPtr<enlib::CObject> param);
 
-class DLL_COMMONLIB_API IThread : public virtual CBaseObject
+namespace enlib
 {
-public:
-    virtual BOOL WINAPI StartMainThread() = 0;
+    class DLL_COMMONLIB_API IThread : public virtual CObject
+    {
+    public:
+        virtual BOOL WINAPI StartMainThread(CObjPtr<CObject> Param) = 0;
 
-    virtual void WINAPI StopMainThread() = 0;
+        virtual void WINAPI StopMainThread() = 0;
 
-    virtual BOOL WINAPI IsMainThreadRunning() = 0;
+        virtual BOOL WINAPI IsMainThreadRunning() = 0;
+    };
 };
 
-extern "C"
-{
-    DLL_COMMONLIB_API IThread* WINAPI CreateIThreadInstance(ThreadMainProc Func, LPVOID Param);
- 
-    DLL_COMMONLIB_API IThread* WINAPI CreateIThreadInstanceEx(ThreadMainProc MainFunc, LPVOID MainParam, ThreadEndProc Endfunc, LPVOID Endparam);
-}
+DLL_COMMONLIB_API enlib::CObjPtr<enlib::IThread> WINAPI CreateIThreadInstance(ThreadMainProc Func);
+
+DLL_COMMONLIB_API enlib::CObjPtr<enlib::IThread> WINAPI CreateIThreadInstanceEx(ThreadMainProc MainFunc, ThreadEndProc Endfunc);
+
 
 #endif

@@ -7,6 +7,8 @@
 
 #include "Log/LogExBase.h"
 
+using namespace enlib;
+
 CHAR gModuleNameArrayA[MAX_PATH] = {'\0'};
 static CHAR* gModuleNameA = gModuleNameArrayA;
 

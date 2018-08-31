@@ -3,6 +3,8 @@
 #include "SocketHelper.h"
 #include "Base/SuperHash.h"
 
+using namespace enlib;
+
 CSocketServer::CSocketServer(SOCKET socket, const CHAR *address, WORD port) : CSocketBase()
 {
     strncpy(m_szSrcAddress, address, 128);
@@ -26,21 +28,12 @@ BOOL WINAPI CSocketServer::Start()
         strcpy(m_szDstAddress, inet_ntoa(SrcAddress.sin_addr));
     }
 
-    RegisterEndHandle(CSocketServer::SelfRelease);
-
     Open();
 
     return TRUE;
 }
 
-void CSocketServer::SelfRelease(ICommunication* param)
-{
-    CSocketBase *Socket = dynamic_cast<CSocketBase *>(param);
-
-    Socket->Release();
-}
-
-CSocketServerService::CSocketServerService(WORD Port, HANDLE StopEvent) : CBaseObject()
+CSocketServerService::CSocketServerService(WORD Port, HANDLE StopEvent) : CObject()
 {
     m_dwSrcPort = Port;
     m_hStopEvent = StopEvent;
@@ -48,8 +41,7 @@ CSocketServerService::CSocketServerService(WORD Port, HANDLE StopEvent) : CBaseO
 
     strcpy(m_szSrcAddress, "127.0.0.1");
 
-    AddRef();
-    m_pMainThread = CreateIThreadInstance(CSocketServerService::ServiceMainThreadProc, this);
+    m_spMainThread = CreateIThreadInstance(CSocketServerService::ServiceMainThreadProc);
 
     InitializeCriticalSection(&m_csLock);
 }
@@ -58,9 +50,7 @@ CSocketServerService::~CSocketServerService()
 {
     StopMainService();
 
-    m_pMainThread->Release();
-
-    m_pMainThread = NULL;
+    m_spMainThread = NULL;
 
     DeleteCriticalSection(&m_csLock);
 }
@@ -71,6 +61,8 @@ BOOL CSocketServerService::StartMainService()
     int flag;
     struct sockaddr_in sockAddr;
     SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    CObjPtr<CObject> spParam = NULL;
+    spParam = this;
 
     if (sock == INVALID_SOCKET)
     {
@@ -95,7 +87,7 @@ BOOL CSocketServerService::StartMainService()
 
     m_ListenSocket = sock;
 
-    m_pMainThread->StartMainThread();
+    m_spMainThread->StartMainThread(spParam);
 
     return TRUE;
 }
@@ -109,9 +101,9 @@ void CSocketServerService::StopMainService()
         m_ListenSocket = INVALID_SOCKET;
     }
 
-    if (m_pMainThread->IsMainThreadRunning())
+    if (m_spMainThread->IsMainThreadRunning())
     {
-        m_pMainThread->StopMainThread();
+        m_spMainThread->StopMainThread();
     }
 }
 
@@ -163,7 +155,7 @@ void CSocketServerService::RegisterConnectHandle(ConnectHandle Func)
     LeaveCriticalSection(&m_csLock);
 }
 
-VOID CSocketServerService::SetParam(const CHAR* ParamKeyword, CBaseObjPtr<CBaseObject> Param)
+VOID CSocketServerService::SetParam(const CHAR* ParamKeyword, CObjPtr<CObject> Param)
 {
 	UINT32 uHash = SuperFastHash(ParamKeyword, strlen(ParamKeyword), 1);
    
@@ -174,9 +166,10 @@ VOID CSocketServerService::SetParam(const CHAR* ParamKeyword, CBaseObjPtr<CBaseO
     return;
 }
 
-BOOL CSocketServerService::ServiceMainThreadProc(LPVOID Parameter, HANDLE StopEvent)
+BOOL CSocketServerService::ServiceMainThreadProc(CObjPtr<CObject> Parameter, HANDLE StopEvent)
 {
-    CSocketServerService* Service = (CSocketServerService*)Parameter;
+    CObjPtr<CSocketServerService> spService = NULL;
+    spService = Parameter;
 
     while (TRUE)
     {
@@ -186,7 +179,7 @@ BOOL CSocketServerService::ServiceMainThreadProc(LPVOID Parameter, HANDLE StopEv
             break;
         }
 
-        SOCKET s = accept(Service->m_ListenSocket, NULL, NULL);
+        SOCKET s = accept(spService->m_ListenSocket, NULL, NULL);
 
         if (s == NULL || s == INVALID_SOCKET)
         {
@@ -194,51 +187,59 @@ BOOL CSocketServerService::ServiceMainThreadProc(LPVOID Parameter, HANDLE StopEv
         }
 
         //when socket server disconnect, it will release itself
-        CSocketServer* Server = new CSocketServer(s, Service->m_szSrcAddress, Service->m_dwSrcPort);
-        Service->InitalizeServer(Server);
-        Server->Start();
+        CSocketServer* pServer = new CSocketServer(s, spService->m_szSrcAddress, spService->m_dwSrcPort);
+        if (pServer)
+        {
+            CObjPtr<CSocketServer> spServer = pServer;
+
+            spService->InitalizeServer(spServer);
+            spServer->Start();
+
+            pServer->Release();
+        }
     }
 
-    Service->Release();
     return FALSE;
 }
 
-void CSocketServerService::InitalizeServer(CSocketServer *Server)
+void CSocketServerService::InitalizeServer(CObjPtr<CSocketServer> spServer)
 {
     std::map<DWORD, RequestPacketHandle>::iterator ReqPacketIterator;
     std::map<DWORD, RequestDataHandle>::iterator ReqDataIterator;
-    std::map<UINT32, CBaseObjPtr<CBaseObject>>::iterator ParamIterator;
+    std::map<UINT32, CObjPtr<CObject>>::iterator ParamIterator;
     std::list<ConnectHandle>::iterator ConnectIterator;
     std::list<EndHandle>::iterator EndIterator;
+    CObjPtr<ICommunication> spCommunication;
+    spCommunication = spServer;
 
     EnterCriticalSection(&m_csLock);
 
     for (ParamIterator = m_ParamMap.begin(); ParamIterator != m_ParamMap.end(); ParamIterator++)
     {
-        Server->SetParam(ParamIterator->first, ParamIterator->second);
+        spServer->SetParam(ParamIterator->first, ParamIterator->second);
     }
 
     for (ConnectIterator = m_ConnectList.begin(); ConnectIterator != m_ConnectList.end(); ConnectIterator++)
     {
         if ((*ConnectIterator) != NULL)
         {
-            (*ConnectIterator)(Server);
+            (*ConnectIterator)(spCommunication);
         }
     }
 
     for (ReqPacketIterator = m_ReqPacketList.begin(); ReqPacketIterator != m_ReqPacketList.end(); ReqPacketIterator++)
     {
-        Server->RegisterRequestHandle(ReqPacketIterator->first, ReqPacketIterator->second);
+        spServer->RegisterRequestHandle(ReqPacketIterator->first, ReqPacketIterator->second);
     }
 
     for (ReqDataIterator = m_ReqDataList.begin(); ReqDataIterator != m_ReqDataList.end(); ReqDataIterator++)
     {
-        Server->RegisterRequestHandle(ReqDataIterator->first, ReqDataIterator->second);
+        spServer->RegisterRequestHandle(ReqDataIterator->first, ReqDataIterator->second);
     }
 
     for (EndIterator = m_EndList.begin(); EndIterator != m_EndList.end(); EndIterator++)
     {
-        Server->RegisterEndHandle(*EndIterator);
+        spServer->RegisterEndHandle(*EndIterator);
     }
 
     LeaveCriticalSection(&m_csLock);

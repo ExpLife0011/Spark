@@ -3,12 +3,38 @@
 #include "Windows/PipeClient.h"
 #include "Windows/PipeServer.h"
 
-IPipeClient* WINAPI CreateIPipeClientInstance(TCHAR *PipeName, DWORD Timeout)
+using namespace enlib;
+
+CObjPtr<IPipeClient> WINAPI CreateIPipeClientInstance(TCHAR *PipeName, DWORD Timeout)
 {
-    return new CPipeClient(PipeName, Timeout);
+    CObjPtr<IPipeClient> spRet = NULL;
+    IPipeClient* pClient = NULL;
+    
+    pClient = new CPipeClient(PipeName, Timeout);
+
+    if (pClient)
+    {
+        spRet = pClient;
+        pClient->Release();
+        pClient = NULL;
+    }
+
+    return spRet;
 }
 
-IPipeServerService* WINAPI CreateIPipeServerServiceInstance(TCHAR* PipeName, DWORD Timeout, HANDLE StopEvent)
+CObjPtr<IPipeServerService> WINAPI CreateIPipeServerServiceInstance(TCHAR* PipeName, DWORD Timeout, HANDLE StopEvent)
 {
-    return new CPipeServerService(PipeName, Timeout, StopEvent);
+    CObjPtr<IPipeServerService> spRet = NULL;
+    IPipeServerService* pService = NULL;
+    
+    pService = new CPipeServerService(PipeName, Timeout, StopEvent);
+
+    if (pService)
+    {
+        spRet = pService;
+        pService->Release();
+        pService = NULL;
+    }
+
+    return spRet;
 }

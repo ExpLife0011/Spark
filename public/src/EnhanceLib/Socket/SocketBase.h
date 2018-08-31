@@ -5,40 +5,43 @@
 #include "Common/Cache.h"
 #include "Socket/ISocketBase.h"
 
-class CSocketBase : public virtual CCommunication, public virtual ISocketBase
+namespace enlib
 {
-public:
-    CSocketBase();
+    class CSocketBase : public virtual CCommunication, public virtual ISocketBase
+    {
+    public:
+        CSocketBase();
 
-    ~CSocketBase();
+        ~CSocketBase();
 
-    virtual void WINAPI Close();
+        virtual void WINAPI Close();
 
-    virtual VOID GetSrcPeer(CHAR* SrcAddress, DWORD BufferLen, WORD* SrcPort);
+        virtual VOID GetSrcPeer(CHAR* SrcAddress, DWORD BufferLen, WORD* SrcPort);
 
-    virtual VOID GetDstPeer(CHAR* DstAddress, DWORD BufferLen, WORD* DstPort);
+        virtual VOID GetDstPeer(CHAR* DstAddress, DWORD BufferLen, WORD* DstPort);
 
-protected:
-    BOOL WINAPI Open();
+    protected:
+        BOOL WINAPI Open();
 
-    SOCKET m_socket;
+        SOCKET m_socket;
 
-    CHAR   m_szDstAddress[128];
-    WORD   m_dwDstPort;
+        CHAR   m_szDstAddress[128];
+        WORD   m_dwDstPort;
 
-    CHAR   m_szSrcAddress[128];
-    WORD   m_dwSrcPort;
+        CHAR   m_szSrcAddress[128];
+        WORD   m_dwSrcPort;
 
-private:
-    virtual IPacketBuffer* RecvAPacket(HANDLE StopEvent);
+    private:
+        virtual CObjPtr<IPacketBuffer> RecvAPacket(HANDLE StopEvent);
 
-    virtual BOOL SendAPacket(IPacketBuffer* Buffer, HANDLE StopEvent);
+        virtual BOOL SendAPacket(CObjPtr<IPacketBuffer> Buffer, HANDLE StopEvent);
 
-    static void SocketClear(ICommunication* param);
+        static void SocketClear(CObjPtr<ICommunication> param);
 
-    BOOL   m_bAlive;
+        BOOL            m_bAlive;
 
-    CCache* m_Cache;
+        CObjPtr<CCache> m_spCache;
+    };
 };
 
 #endif

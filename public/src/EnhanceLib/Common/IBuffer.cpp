@@ -1,22 +1,51 @@
-﻿#include "Common/IBuffer.h"
+﻿#include "stdafx.h"
+#include "Common/IBuffer.h"
 #include "Common/Buffer.h"
 
-IPacketBuffer* WINAPI CreateIBufferInstance(DWORD len)
+using namespace enlib;
+
+CObjPtr<IPacketBuffer> WINAPI CreateIBufferInstance(DWORD len)
 {
-    return new CPacketBuffer(len);
+    CObjPtr<IPacketBuffer> spBuffer = NULL;
+    IPacketBuffer* pBuffer = NULL;
+    pBuffer = new CPacketBuffer(len);
+    if (pBuffer)
+    {
+        spBuffer = pBuffer;
+        pBuffer->Release();
+        pBuffer = NULL;
+    }
+
+    return spBuffer;
 }
 
-IPacketBuffer* WINAPI CreateIBufferInstanceEx(BYTE* buffer, DWORD len)
+CObjPtr<IPacketBuffer> WINAPI CreateIBufferInstanceEx(BYTE* buffer, DWORD len)
 {
-    return new CPacketBuffer(buffer, len);
+    CObjPtr<IPacketBuffer> spBuffer = NULL;
+    IPacketBuffer* pBuffer = NULL;
+    pBuffer = new CPacketBuffer(buffer, len);
+    if (pBuffer)
+    {
+        spBuffer = pBuffer;
+        pBuffer->Release();
+        pBuffer = NULL;
+    }
+
+    return spBuffer;
 }
 
-IPacketBuffer* WINAPI CreateIBufferInstanceEx2(BYTE* buffer, DWORD len, DWORD HeadRoom, DWORD TailRoom)
+CObjPtr<IPacketBuffer> WINAPI CreateIBufferInstanceEx2(BYTE* buffer, DWORD len, DWORD HeadRoom, DWORD TailRoom)
 {
-    return new CPacketBuffer(buffer, len, HeadRoom, TailRoom);
+    CObjPtr<IPacketBuffer> spBuffer = NULL;
+    IPacketBuffer* pBuffer = NULL;
+    pBuffer = new CPacketBuffer(buffer, len, HeadRoom, TailRoom);
+    if (pBuffer)
+    {
+        spBuffer = pBuffer;
+        pBuffer->Release();
+        pBuffer = NULL;
+    }
+
+    return spBuffer;
 }
 
-void WINAPI DestoryIBufferInstance(IPacketBuffer* Buffer)
-{
-    delete((CPacketBuffer*)Buffer);
-}

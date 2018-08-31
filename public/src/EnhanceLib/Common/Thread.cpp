@@ -5,19 +5,21 @@
 #include <pthread.h>
 #endif
 
+using namespace enlib;
+
 #define INVALID_THREAD_ID ((DWORD)-1)
 
-CThread::CThread(ThreadMainProc Func, LPVOID Param) : CBaseObject()
+CThread::CThread(ThreadMainProc Func) : CObject()
 {
-    Init(Func, Param, NULL, NULL);
+    Init(Func, NULL);
 }
 
-CThread::CThread(ThreadMainProc MainFunc, LPVOID MainParam, ThreadEndProc EndFunc, LPVOID EndParam) : CBaseObject()
+CThread::CThread(ThreadMainProc MainFunc, ThreadEndProc EndFunc) : CObject()
 {
-    Init(MainFunc, MainParam, EndFunc, EndParam);
+    Init(MainFunc, EndFunc);
 }
 
-void CThread::Init(ThreadMainProc MainFunc, LPVOID MainParam, ThreadEndProc EndFunc, LPVOID EndParam)
+void CThread::Init(ThreadMainProc MainFunc, ThreadEndProc EndFunc)
 {
     m_hMainThread = NULL;
     m_dwMainThreadId = INVALID_THREAD_ID;
@@ -30,10 +32,9 @@ void CThread::Init(ThreadMainProc MainFunc, LPVOID MainParam, ThreadEndProc EndF
     m_bContinueMainThread = FALSE;
 
     m_fnMainProc = MainFunc;
-    m_pMainProcParam = MainParam;
+    m_spParam = NULL;
 
     m_fnEndProc = EndFunc;
-    m_pEndProcParam = EndParam;
     InitializeCriticalSection(&m_csEndLock);
 }
 
@@ -68,17 +69,27 @@ CThread::~CThread(void)
     DeleteCriticalSection(&m_csEndLock);
 }
 
-BOOL CThread::StartMainThread()
+BOOL CThread::StartMainThread(CObjPtr<CObject> Param)
 {
     DWORD dwRet;
     ResetEvent(m_hStopMainThreadEvent);
     ResetEvent(m_hMainThreadStartedEvent);
     
+    m_spParam = Param;
+
     m_hMainThread = CreateThread(NULL, 0, CThread::MainThread, this, 0, &m_dwMainThreadId);
 
 	dwRet = WaitForSingleObject(m_hMainThreadStartedEvent, 5000);
 
-    return (dwRet == WAIT_OBJECT_0);
+    if (dwRet == WAIT_OBJECT_0)
+    {
+        return TRUE;
+    }
+    else
+    {
+        m_spParam = NULL;
+        return FALSE;
+    }
 }
 
 void CThread::StopMainThread()
@@ -105,42 +116,40 @@ void CThread::StopMainThread()
 
 DWORD WINAPI CThread::MainThread(LPVOID Lp)
 {
-    CThread* Thread = (CThread*)Lp;
+    CObjPtr<CThread> spThread = NULL;
+    spThread = (CThread*)Lp;
 #ifndef WIN32
     pthread_detach(pthread_self());
 #endif
 
-    if (Thread)
-    {
-        Thread->AddRef();
-    }
-    else
+    if (spThread == NULL)
     {
         return 0;
     }
 
-    ResetEvent(Thread->m_hStopMainThreadEvent);
-    ResetEvent(Thread->m_hMainThreadStopedEvent);
-    Thread->m_bContinueMainThread = TRUE;
-    SetEvent(Thread->m_hMainThreadStartedEvent);
+    ResetEvent(spThread->m_hStopMainThreadEvent);
+    ResetEvent(spThread->m_hMainThreadStopedEvent);
+    spThread->m_bContinueMainThread = TRUE;
+    SetEvent(spThread->m_hMainThreadStartedEvent);
 
-    while (Thread->m_bContinueMainThread)
+    while (spThread->m_bContinueMainThread)
     {
-        if (!Thread->m_fnMainProc(Thread->m_pMainProcParam, Thread->m_hStopMainThreadEvent))
+        if (!(spThread->m_fnMainProc(spThread->m_spParam, spThread->m_hStopMainThreadEvent)))
         {
             break;
         }
     }
 
-    EnterCriticalSection(&Thread->m_csEndLock);
-    if (Thread->m_fnEndProc)
+    EnterCriticalSection(&spThread->m_csEndLock);
+    if (spThread->m_fnEndProc)
     {
-        Thread->m_fnEndProc(Thread->m_pEndProcParam);
+        spThread->m_fnEndProc(spThread->m_spParam);
     }
-    SetEvent(Thread->m_hMainThreadStopedEvent);
-    LeaveCriticalSection(&Thread->m_csEndLock);
+    SetEvent(spThread->m_hMainThreadStopedEvent);
+    LeaveCriticalSection(&spThread->m_csEndLock);
 
-    Thread->Release();
+    spThread->m_spParam = NULL;
+
     return 0;
 }
 

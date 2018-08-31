@@ -7,31 +7,34 @@
 #include "Common/Communication.h"
 #include "Base/BaseObjPtr.h"
 
-class CPipeClient : public IPipeClient, public CCommunication
+namespace enlib
 {
-public:
-    CPipeClient(TCHAR *PipeName, DWORD Timeout);
+    class CPipeClient : public IPipeClient, public CCommunication
+    {
+    public:
+        CPipeClient(TCHAR *PipeName, DWORD Timeout);
 
-    virtual ~CPipeClient();
+        virtual ~CPipeClient();
 
-    virtual BOOL WINAPI Connect();
+        virtual BOOL WINAPI Connect();
 
-    virtual void WINAPI DisConnect();
-    
-    virtual BOOL WINAPI IsConnected();
+        virtual void WINAPI DisConnect();
 
-private:
-    virtual IPacketBuffer* RecvAPacket(HANDLE StopEvent);
+        virtual BOOL WINAPI IsConnected();
 
-    virtual BOOL SendAPacket(IPacketBuffer* Buffer, HANDLE StopEvent);
+    private:
+        virtual CObjPtr<IPacketBuffer> RecvAPacket(HANDLE StopEvent);
 
-    static void PipeClear(ICommunication* param);
+        virtual BOOL SendAPacket(CObjPtr<IPacketBuffer> Buffer, HANDLE StopEvent);
 
-    HANDLE InitSyncLock();
-    
-    HANDLE                                     m_hPipe;
-    TCHAR*                                     m_szPipeName;
-    DWORD                                      m_dwTimeout;
+        static void PipeClear(CObjPtr<ICommunication> Param);
+
+        HANDLE InitSyncLock();
+
+        HANDLE                                     m_hPipe;
+        TCHAR*                                     m_szPipeName;
+        DWORD                                      m_dwTimeout;
+    };
 };
 
 #endif

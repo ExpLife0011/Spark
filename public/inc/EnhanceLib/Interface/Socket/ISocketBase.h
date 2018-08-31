@@ -7,14 +7,17 @@
 #include "DllExport.h"
 #include "Base/ParamSet.h"
 
-class DLL_COMMONLIB_API ISocketBase : public virtual ICommunication, public virtual CParamSet
+namespace enlib
 {
-public:
-    virtual void WINAPI Close() = 0;
+    class DLL_COMMONLIB_API ISocketBase : public virtual ICommunication, public virtual CParamSet
+    {
+    public:
+        virtual void WINAPI Close() = 0;
 
-    virtual VOID GetSrcPeer(CHAR* SrcAddress, DWORD BufferLen, WORD* SrcPort) = 0;
+        virtual VOID GetSrcPeer(CHAR* SrcAddress, DWORD BufferLen, WORD* SrcPort) = 0;
 
-    virtual VOID GetDstPeer(CHAR* DstAddress, DWORD BufferLen, WORD* DstPort) = 0;
+        virtual VOID GetDstPeer(CHAR* DstAddress, DWORD BufferLen, WORD* DstPort) = 0;
+    };
 };
 
 #endif

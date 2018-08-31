@@ -1,5 +1,5 @@
-﻿#ifndef __IOPINI_H__
-#define __IOPINI_H__
+﻿#ifndef __ENLIB_IOPINI_H__
+#define __ENLIB_IOPINI_H__
 
 #ifdef WIN32
 #include <Windows.h>
@@ -10,23 +10,24 @@
 #include "DllExport.h"
 #include "Base/BaseObject.h"
 
-class IFileIni : public virtual CBaseObject
+namespace enlib
 {
-public:
-    virtual BOOL ReadOption(const CHAR* segment, const CHAR* name, CHAR* value) = 0;
+    class IFileIni : public virtual CObject
+    {
+    public:
+        virtual BOOL ReadOption(const CHAR* segment, const CHAR* name, CHAR* value) = 0;
 
-    virtual BOOL ReadOption(const CHAR* segment, const CHAR* name, DWORD* value) = 0;
+        virtual BOOL ReadOption(const CHAR* segment, const CHAR* name, DWORD* value) = 0;
 
-    virtual BOOL DeleteOption(const CHAR* segment, const CHAR* name) = 0;
+        virtual BOOL DeleteOption(const CHAR* segment, const CHAR* name) = 0;
 
-    virtual BOOL WriteOption(const CHAR* segment, const CHAR* name, CHAR* value) = 0;
+        virtual BOOL WriteOption(const CHAR* segment, const CHAR* name, CHAR* value) = 0;
 
-    virtual BOOL WriteOption(const CHAR* segment, const CHAR* name, DWORD value) = 0;
+        virtual BOOL WriteOption(const CHAR* segment, const CHAR* name, DWORD value) = 0;
+    };
 };
 
-extern "C"
-{
-    DLL_COMMONLIB_API IFileIni* WINAPI CreateIFileIniInstance(const CHAR* inifile);
-}
+DLL_COMMONLIB_API enlib::CObjPtr<enlib::IFileIni> WINAPI CreateIFileIniInstance(const CHAR* inifile);
+
 
 #endif

@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef __SUPER_HASH_H__
-#define __SUPER_HASH_H__
+#ifndef __ENLIB_SUPER_HASH_H__
+#define __ENLIB_SUPER_HASH_H__
 
 #include <stdint.h>
 #include <stdio.h>

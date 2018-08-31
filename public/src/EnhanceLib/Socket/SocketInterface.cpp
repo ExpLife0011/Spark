@@ -3,12 +3,35 @@
 #include "Socket/SocketClient.h"
 #include "Socket/SocketServer.h"
 
-ISocketClient* WINAPI CreateISocketClientInstance(const CHAR *address, WORD port)
+using namespace enlib;
+
+CObjPtr<ISocketClient> WINAPI CreateISocketClientInstance(const CHAR *address, WORD port)
 {
-    return new CSocketClient(address, port);
+    CObjPtr<ISocketClient> pRet = NULL;
+    ISocketClient* pClient = NULL;
+    pClient = new CSocketClient(address, port);
+    if (pClient)
+    {
+        pRet = pClient;
+        pClient->Release();
+        pClient = NULL;
+    }
+
+    return pRet;
 }
 
-ISocketServerService* WINAPI CreateISocketServerServiceInstance(WORD Port, HANDLE StopEvent)
+CObjPtr<ISocketServerService> WINAPI CreateISocketServerServiceInstance(WORD Port, HANDLE StopEvent)
 {
-    return new CSocketServerService(Port, StopEvent);
+    CObjPtr<ISocketServerService> pRet = NULL;
+    ISocketServerService* pService = NULL;
+    pService = new CSocketServerService(Port, StopEvent);
+
+    if (pService)
+    {
+        pRet = pService;
+        pService->Release();
+        pService = NULL;
+    }
+
+    return pRet;
 }

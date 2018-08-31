@@ -2,15 +2,17 @@
 #include "Common/Communication.h"
 #include "Common/Buffer.h"
 
-CCommunication::CCommunication() : CBaseObject()
+using namespace enlib;
+
+CCommunication::CCommunication() : CObject()
 {
     m_dwRequestId = 0;
     m_dwSendBufferLength = 0;
 
     m_spRecvThread = NULL;
     m_spSendThread = NULL;
-    m_spRecvThread = CreateIThreadInstanceEx(CCommunication::RecvThreadProc, (LPVOID)this, CCommunication::RecvThreadEndProc, (LPVOID)this);
-    m_spSendThread = CreateIThreadInstanceEx(CCommunication::SendThreadProc, (LPVOID)this, CCommunication::SendThreadEndProc, (LPVOID)this);
+    m_spRecvThread = CreateIThreadInstanceEx(CCommunication::RecvThreadProc, CCommunication::RecvThreadEndProc);
+    m_spSendThread = CreateIThreadInstanceEx(CCommunication::SendThreadProc, CCommunication::SendThreadEndProc);
 
     m_hSendEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     InitializeCriticalSection(&m_csSendListLock);
@@ -36,16 +38,16 @@ CCommunication::~CCommunication()
 
 BOOL CCommunication::StartCommunication()
 {
+    CObjPtr<CObject> spParam = NULL;
+    spParam = this;
     if (!m_spSendThread->IsMainThreadRunning())
     {
-        AddRef();
-        m_spSendThread->StartMainThread();
+        m_spSendThread->StartMainThread(spParam);
     }
 
     if (!m_spRecvThread->IsMainThreadRunning())
     {
-        AddRef();
-        m_spRecvThread->StartMainThread();
+        m_spRecvThread->StartMainThread(spParam);
     }
 
     return TRUE;
@@ -83,8 +85,8 @@ BOOL CCommunication::RegisterRequestHandle(DWORD Type, RequestDataHandle Func)
 {
     EnterCriticalSection(&m_csRecvListLock);
 
-    if (this->m_ReqDataList.find(Type) != this->m_ReqDataList.end()
-        || this->m_ReqPacketList.find(Type) != this->m_ReqPacketList.end())
+    if (m_ReqDataList.find(Type) != m_ReqDataList.end()
+        || m_ReqPacketList.find(Type) != m_ReqPacketList.end())
     {
         //重复注册返回失败
         LeaveCriticalSection(&m_csRecvListLock);
@@ -92,7 +94,7 @@ BOOL CCommunication::RegisterRequestHandle(DWORD Type, RequestDataHandle Func)
     }
     else
     {
-        this->m_ReqDataList[Type] = Func;
+        m_ReqDataList[Type] = Func;
     }
     LeaveCriticalSection(&m_csRecvListLock);
 
@@ -103,8 +105,8 @@ BOOL CCommunication::RegisterRequestHandle(DWORD Type, RequestPacketHandle Func)
 {
     EnterCriticalSection(&m_csRecvListLock);
 
-    if (this->m_ReqDataList.find(Type) != this->m_ReqDataList.end()
-        || this->m_ReqPacketList.find(Type) != this->m_ReqPacketList.end())
+    if (m_ReqDataList.find(Type) != m_ReqDataList.end()
+        || m_ReqPacketList.find(Type) != m_ReqPacketList.end())
     {
         LeaveCriticalSection(&m_csRecvListLock);
         return FALSE;
@@ -146,7 +148,7 @@ VOID CCommunication::CancelIO()
         {
             DataHdr* Block = (DataHdr*)EndIterator->Buffer->GetData();
             m_dwSendBufferLength -= Block->Len;
-            EndIterator->Buffer->Release();
+            EndIterator->Buffer = NULL;
         }
     }
 
@@ -174,7 +176,7 @@ VOID CCommunication::CancelIO()
     LeaveCriticalSection(&m_csRecvListLock);
 }
 
-void CCommunication::SendPacket(IPacketBuffer* Buffer, HANDLE DoneEvent)
+void CCommunication::SendPacket(CObjPtr<IPacketBuffer> Buffer, HANDLE DoneEvent)
 {
     SendNode Node;
 
@@ -187,7 +189,6 @@ void CCommunication::SendPacket(IPacketBuffer* Buffer, HANDLE DoneEvent)
         ResetEvent(Node.Event);
     }
 
-    Buffer->AddRef();
     Node.Buffer = Buffer;
 
     //插入队列
@@ -200,7 +201,7 @@ void CCommunication::SendPacket(IPacketBuffer* Buffer, HANDLE DoneEvent)
     return;
 }
 
-BOOL CCommunication::SendRequestWithRespone(DWORD Type, IPacketBuffer* Buffer, IPacketBuffer** Reply, HANDLE DoneEvent)
+BOOL CCommunication::SendRequestWithRespone(DWORD Type, CObjPtr<IPacketBuffer> Buffer, CObjPtr<IPacketBuffer>* Reply, HANDLE DoneEvent)
 {
     WaitResponeNode* Node = NULL;
 
@@ -251,16 +252,14 @@ BOOL CCommunication::SendRequestWithRespone(DWORD Type, IPacketBuffer* Buffer, I
 
 BOOL CCommunication::SendRequest(DWORD Type, PBYTE Data, DWORD DataLen, HANDLE DoneEvent)
 {
-    IPacketBuffer* Packet = CreateIBufferInstanceEx(Data, DataLen);
+    CObjPtr<IPacketBuffer> Packet = CreateIBufferInstanceEx(Data, DataLen);
 
     BOOL Ret = SendRequest(Type, Packet, DoneEvent);
-
-    Packet->Release();
 
     return Ret;
 }
 
-BOOL CCommunication::SendRequest(DWORD Type, IPacketBuffer* Buffer, HANDLE DoneEvent)
+BOOL CCommunication::SendRequest(DWORD Type, CObjPtr<IPacketBuffer> Buffer, HANDLE DoneEvent)
 {
     DWORD Len = Buffer->GetBufferLength();
 
@@ -285,16 +284,14 @@ BOOL CCommunication::SendRequest(DWORD Type, IPacketBuffer* Buffer, HANDLE DoneE
 
 BOOL CCommunication::SendRespone(DWORD Type, PBYTE Data, DWORD DataLen, DWORD Id, HANDLE DoneEvent)
 {
-    IPacketBuffer* Packet = CreateIBufferInstanceEx(Data, DataLen);
+    CObjPtr<IPacketBuffer> Packet = CreateIBufferInstanceEx(Data, DataLen);
 
     BOOL Ret = SendRespone(Type, Packet, Id, DoneEvent);
-
-    Packet->Release();
 
     return Ret;
 }
 
-BOOL CCommunication::SendRespone(DWORD Type, IPacketBuffer* Buffer, DWORD Id, HANDLE DoneEvent)
+BOOL CCommunication::SendRespone(DWORD Type, CObjPtr<IPacketBuffer> Buffer, DWORD Id, HANDLE DoneEvent)
 {
     DWORD Len = Buffer->GetBufferLength();
 
@@ -315,22 +312,25 @@ BOOL CCommunication::SendRespone(DWORD Type, IPacketBuffer* Buffer, DWORD Id, HA
     return TRUE;
 }
 
-BOOL CCommunication::RecvThreadProc(LPVOID Parameter, HANDLE StopEvent)
+BOOL CCommunication::RecvThreadProc(CObjPtr<CObject> Parameter, HANDLE StopEvent)
 {
     BASE_PACKET_T *Package = NULL;
-    IPacketBuffer* Buffer;
+    CObjPtr<IPacketBuffer> Buffer = NULL;
     DataHdr  *Header = NULL;
-    CCommunication *Communicate = (CCommunication *)Parameter;
+    CObjPtr<CCommunication> spCommunicate = NULL;
+    CObjPtr<ICommunication> spICommunicate = NULL;
     WaitResponeNode* RecvNode = NULL;
     RequestPacketHandle PacketFunc;
     RequestDataHandle DataFunc;
     std::map<DWORD, WaitResponeNode*>::iterator WaitRespIterator;
     std::map<DWORD, RequestPacketHandle>::iterator ReqPacketIterator;
     std::map<DWORD, RequestDataHandle>::iterator ReqDataIterator;
-
     std::list<EndHandle>::iterator end_itor;
 
-    Buffer = Communicate->RecvAPacket(StopEvent);
+    spCommunicate = Parameter;
+    spICommunicate = spCommunicate;
+
+    Buffer = spCommunicate->RecvAPacket(StopEvent);
     if (Buffer == NULL)
     {
         return FALSE;
@@ -340,7 +340,6 @@ BOOL CCommunication::RecvThreadProc(LPVOID Parameter, HANDLE StopEvent)
 
     if (!Buffer->DataPull(sizeof(BASE_PACKET_T)))
     {
-        Buffer->Release();
         return FALSE;
     }
 
@@ -348,71 +347,72 @@ BOOL CCommunication::RecvThreadProc(LPVOID Parameter, HANDLE StopEvent)
 
     if ((Header->Flags & HDR_DIRECT_MASK) == HDR_DIRECT_REQ)
     {
-        EnterCriticalSection(&Communicate->m_csRecvListLock);
-        ReqPacketIterator = Communicate->m_ReqPacketList.find(Package->Type);
-        ReqDataIterator = Communicate->m_ReqDataList.find(Package->Type);
+        EnterCriticalSection(&spCommunicate->m_csRecvListLock);
+        ReqPacketIterator = spCommunicate->m_ReqPacketList.find(Package->Type);
+        ReqDataIterator = spCommunicate->m_ReqDataList.find(Package->Type);
 
-        if (ReqPacketIterator != Communicate->m_ReqPacketList.end())
+        if (ReqPacketIterator != spCommunicate->m_ReqPacketList.end())
         {
             PacketFunc = ReqPacketIterator->second;
             if (Buffer->DataPull(sizeof(DataHdr)))
             {
                 if (PacketFunc)
                 {
-                    PacketFunc(Buffer, Header->Id, (ICommunication*)Communicate);
+                    PacketFunc(Buffer, Header->Id, spICommunicate);
                 }
             }
         }
-        else if (ReqDataIterator != Communicate->m_ReqDataList.end())
+        else if (ReqDataIterator != spCommunicate->m_ReqDataList.end())
         {
             DataFunc = ReqDataIterator->second;
             if (Buffer->DataPull(sizeof(DataHdr)))
             {
-                DataFunc(Buffer->GetData(), Buffer->GetBufferLength(), Header->Id, (ICommunication*)Communicate);
+                DataFunc(Buffer->GetData(), Buffer->GetBufferLength(), Header->Id, spICommunicate);
             }
         }
-        LeaveCriticalSection(&Communicate->m_csRecvListLock);
+        LeaveCriticalSection(&spCommunicate->m_csRecvListLock);
     }
     else if ((Header->Flags & HDR_DIRECT_MASK) == HDR_DIRECT_RESP)
     {
-        EnterCriticalSection(&Communicate->m_csRecvListLock);
-        WaitRespIterator = Communicate->m_WaitRespNodeList.find(Header->Id);
-        if (WaitRespIterator != Communicate->m_WaitRespNodeList.end())
+        EnterCriticalSection(&spCommunicate->m_csRecvListLock);
+        WaitRespIterator = spCommunicate->m_WaitRespNodeList.find(Header->Id);
+        if (WaitRespIterator != spCommunicate->m_WaitRespNodeList.end())
         {
             RecvNode = WaitRespIterator->second;
             if (Buffer->DataPull(sizeof(DataHdr)))
             {
-                Buffer->AddRef();
                 *(RecvNode->Buffer) = Buffer;
             }
             else
             {
                 *(RecvNode->Buffer) = NULL;
             }
-            Communicate->m_WaitRespNodeList.erase(WaitRespIterator);
+            spCommunicate->m_WaitRespNodeList.erase(WaitRespIterator);
 
             if (RecvNode->Event)
             {
                 SetEvent(RecvNode->Event);
             }
         }
-        LeaveCriticalSection(&Communicate->m_csRecvListLock);
+        LeaveCriticalSection(&spCommunicate->m_csRecvListLock);
     }
-
-    Buffer->Release();
 
     return TRUE;
 }
 
-void CCommunication::RecvThreadEndProc(LPVOID Parameter)
+void CCommunication::RecvThreadEndProc(CObjPtr<CObject> Parameter)
 {
-    CCommunication *Communicate = (CCommunication *)Parameter;
+    CObjPtr<CCommunication> spCommunicate = NULL;
+    CObjPtr<ICommunication> spICommunicate = NULL;
     std::map<DWORD, WaitResponeNode*>::iterator WaitRespIterator;
     std::list<EndHandle>::iterator EndIterator;
     WaitResponeNode* RecvNode = NULL;
 
-    EnterCriticalSection(&Communicate->m_csRecvListLock);
-    for (WaitRespIterator = Communicate->m_WaitRespNodeList.begin(); WaitRespIterator != Communicate->m_WaitRespNodeList.end(); WaitRespIterator++)
+    spCommunicate = Parameter;
+    spICommunicate = spCommunicate;
+
+    EnterCriticalSection(&spCommunicate->m_csRecvListLock);
+    for (WaitRespIterator = spCommunicate->m_WaitRespNodeList.begin(); WaitRespIterator != spCommunicate->m_WaitRespNodeList.end(); WaitRespIterator++)
     {
         RecvNode = WaitRespIterator->second;
         *RecvNode->Buffer = NULL;
@@ -425,27 +425,27 @@ void CCommunication::RecvThreadEndProc(LPVOID Parameter)
         free(RecvNode);
     }
 
-    Communicate->m_WaitRespNodeList.clear();
+    spCommunicate->m_WaitRespNodeList.clear();
 
-    for (EndIterator = Communicate->m_EndList.begin(); EndIterator != Communicate->m_EndList.end(); EndIterator++)
+    for (EndIterator = spCommunicate->m_EndList.begin(); EndIterator != spCommunicate->m_EndList.end(); EndIterator++)
     {
         if ((*EndIterator))
         {
-            (*EndIterator)(Communicate);
+            (*EndIterator)(spICommunicate);
         }
     }
 
-    LeaveCriticalSection(&Communicate->m_csRecvListLock);
-
-    Communicate->Release();
+    LeaveCriticalSection(&spCommunicate->m_csRecvListLock);
 }
 
-BOOL CCommunication::SendThreadProc(LPVOID Parameter, HANDLE StopEvent)
+BOOL CCommunication::SendThreadProc(CObjPtr<CObject> Parameter, HANDLE StopEvent)
 {
     BASE_PACKET_T *Packet;
-    CCommunication *Communicate = (CCommunication *)Parameter;
+    CObjPtr<CCommunication> spCommunicate = NULL;
 
-    HANDLE hEvents[2] = { Communicate->m_hSendEvent, StopEvent };
+    spCommunicate = Parameter;
+
+    HANDLE hEvents[2] = {spCommunicate->m_hSendEvent, StopEvent };
     DWORD ret;
 
     ret = WaitForMultipleObjects(2, hEvents, FALSE, INFINITE);
@@ -454,18 +454,18 @@ BOOL CCommunication::SendThreadProc(LPVOID Parameter, HANDLE StopEvent)
     {
     case WAIT_OBJECT_0:
 
-        EnterCriticalSection(&Communicate->m_csSendListLock);
-        if (!Communicate->m_SendList.empty())
+        EnterCriticalSection(&spCommunicate->m_csSendListLock);
+        if (!(spCommunicate->m_SendList.empty()))
         {
             DWORD Ret;
-            SendNode Node = Communicate->m_SendList.front();
-            IPacketBuffer* Buffer = Node.Buffer;
+            SendNode Node = spCommunicate->m_SendList.front();
+            CObjPtr<IPacketBuffer> Buffer = Node.Buffer;
             DataHdr* Block = (DataHdr*)Buffer->GetData();
 
-            Communicate->m_dwSendBufferLength -= Block->Len;
-            Communicate->m_SendList.pop_front();
+            spCommunicate->m_dwSendBufferLength -= Block->Len;
+            spCommunicate->m_SendList.pop_front();
 
-            LeaveCriticalSection(&Communicate->m_csSendListLock);
+            LeaveCriticalSection(&spCommunicate->m_csSendListLock);
 
             if (!Buffer->DataPush(sizeof(BASE_PACKET_T)))
             {
@@ -474,7 +474,6 @@ BOOL CCommunication::SendThreadProc(LPVOID Parameter, HANDLE StopEvent)
                     SetEvent(Node.Event);
                 }
 
-                Buffer->Release();
                 return FALSE;
             }
 
@@ -482,14 +481,12 @@ BOOL CCommunication::SendThreadProc(LPVOID Parameter, HANDLE StopEvent)
             Packet->Type = Block->Type;
             Packet->Length = sizeof(BASE_PACKET_T) + sizeof(DataHdr) + Block->Len;
 
-            Ret = Communicate->SendAPacket(Buffer, StopEvent);
+            Ret = spCommunicate->SendAPacket(Buffer, StopEvent);
 
             if (Node.Event)
             {
                 SetEvent(Node.Event);
             }
-
-            Buffer->Release();
 
             if (Ret == FALSE)
             {
@@ -498,8 +495,8 @@ BOOL CCommunication::SendThreadProc(LPVOID Parameter, HANDLE StopEvent)
         }
         else
         {
-            ResetEvent(Communicate->m_hSendEvent);
-            LeaveCriticalSection(&Communicate->m_csSendListLock);
+            ResetEvent(spCommunicate->m_hSendEvent);
+            LeaveCriticalSection(&spCommunicate->m_csSendListLock);
         }
 
         break;
@@ -514,13 +511,15 @@ BOOL CCommunication::SendThreadProc(LPVOID Parameter, HANDLE StopEvent)
     return TRUE;
 }
 
-void CCommunication::SendThreadEndProc(LPVOID Parameter)
+void CCommunication::SendThreadEndProc(CObjPtr<CObject> Parameter)
 {
-    CCommunication *Communicate = (CCommunication *)Parameter;
     std::list<SendNode>::iterator EndIterator;
+    CObjPtr<CCommunication> spCommunicate = NULL;
 
-    EnterCriticalSection(&Communicate->m_csSendListLock);
-    for (EndIterator = Communicate->m_SendList.begin(); EndIterator != Communicate->m_SendList.end(); EndIterator++)
+    spCommunicate = Parameter;
+
+    EnterCriticalSection(&spCommunicate->m_csSendListLock);
+    for (EndIterator = spCommunicate->m_SendList.begin(); EndIterator != spCommunicate->m_SendList.end(); EndIterator++)
     {
         if (EndIterator->Event)
         {
@@ -530,16 +529,14 @@ void CCommunication::SendThreadEndProc(LPVOID Parameter)
         if (EndIterator->Buffer)
         {
             DataHdr* Block = (DataHdr*)EndIterator->Buffer->GetData();
-            Communicate->m_dwSendBufferLength -= Block->Len;
-            EndIterator->Buffer->Release();
+            spCommunicate->m_dwSendBufferLength -= Block->Len;
+            EndIterator->Buffer = NULL;
         }
     }
 
-    Communicate->m_SendList.clear();
+    spCommunicate->m_SendList.clear();
 
-    LeaveCriticalSection(&Communicate->m_csSendListLock);
-
-    Communicate->Release();
+    LeaveCriticalSection(&spCommunicate->m_csSendListLock);
 
     return;
 }

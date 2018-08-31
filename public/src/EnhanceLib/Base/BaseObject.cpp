@@ -1,21 +1,23 @@
 #include "Base/BaseObject.h"
 
-CBaseObject::CBaseObject()
+using namespace enlib; 
+
+CObject::CObject()
 {
     m_lRef = 1;
 }
 
-CBaseObject::~CBaseObject()
+CObject::~CObject()
 {
 
 }
 
-LONG CBaseObject::AddRef()
+LONG CObject::AddRef()
 {
     return InterlockedIncrement(&m_lRef);
 }
 
-LONG CBaseObject::Release()
+LONG CObject::Release()
 {
     LONG Temp = InterlockedDecrement(&m_lRef);
     if (Temp == 0)

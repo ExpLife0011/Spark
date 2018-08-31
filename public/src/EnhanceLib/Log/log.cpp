@@ -6,7 +6,9 @@
 #include <errno.h>
 #include <sys/stat.h>
 
-CLogWriter::CLogWriter() : CBaseObject()
+using namespace enlib;
+
+CLogWriter::CLogWriter() : CObject()
 {
     m_dwLogLevel = LOG_LEVEL_INFO;
     m_hFileHandle = NULL;

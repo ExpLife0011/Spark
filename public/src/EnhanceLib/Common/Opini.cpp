@@ -1,11 +1,4 @@
-﻿/**
-* @file     Opini.cpp
-* @author   4680414@qq.com
-* @date     2017/1/25
-* @version  1.0
-* @brief    Ini文件类解析类源文件
-*/
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #ifndef WIN32
 #include <winpr/file.h>
 #endif
@@ -14,7 +7,8 @@
 #define BUFFER_LEN 32768
 #define LINE_LENGTH 4096
 
-/** < 前后去除空格 */
+using namespace enlib;
+
 static CHAR *DeleteSpace(CHAR *sp)
 {
     CHAR * tp;
@@ -172,11 +166,11 @@ BOOL CFileIni::ReadOption(const CHAR* segment, const CHAR* name, CHAR* value)
     }
 
     //查找片段
-    while (!this->ReadLineFromFile(file, buf))
+    while (!ReadLineFromFile(file, buf))
     {
         if (FindAllSegment || strcmp(seg, buf) == 0)
         {
-            while (!this->ReadLineFromFile(file, buf) && buf[0] != '[')
+            while (!ReadLineFromFile(file, buf) && buf[0] != '[')
             {
                 //查找等于号后截断
                 for (i = 0; buf[i] != '=' && buf[i]; i++)
@@ -225,7 +219,7 @@ BOOL CFileIni::ReadOption(const CHAR* segment, const CHAR* name, CHAR* value)
 BOOL CFileIni::ReadOption(const CHAR* segment, const CHAR* name, DWORD* value)
 {
     CHAR tmp[MAX_PATH];
-    if (this->ReadOption(segment, name, tmp))
+    if (ReadOption(segment, name, tmp))
     {
         *value = atoi(tmp);
         return TRUE;
@@ -387,7 +381,7 @@ BOOL CFileIni::WriteOption(const CHAR* segment, const CHAR* name, DWORD value)
 {
     CHAR tmp[MAX_PATH];
     sprintf(tmp, "%d", (int)value);
-    return this->WriteOption(segment, name, tmp);
+    return WriteOption(segment, name, tmp);
 }
 
 

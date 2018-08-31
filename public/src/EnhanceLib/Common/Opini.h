@@ -1,42 +1,44 @@
-﻿#ifndef __OPINI_H__
-#define __OPINI_H__
+﻿#ifndef __ENLIB_OPINI_H__
+#define __ENLIB_OPINI_H__
 
 #include "Common/IOpini.h"
 #include "Base/BaseObject.h"
 #include <stdio.h>
 
-class CFileIni : public IFileIni
+namespace enlib
 {
-public:
-    CFileIni(const CHAR* IniFile);
+    class CFileIni : public IFileIni
+    {
+    public:
+        CFileIni(const CHAR* IniFile);
 
-    virtual ~CFileIni();
+        virtual ~CFileIni();
 
-    virtual BOOL ReadOption(const CHAR* Segment, const CHAR* Name, CHAR* Value);
+        virtual BOOL ReadOption(const CHAR* Segment, const CHAR* Name, CHAR* Value);
 
-    virtual BOOL ReadOption(const CHAR* Segment, const CHAR* Name, DWORD* Value);
+        virtual BOOL ReadOption(const CHAR* Segment, const CHAR* Name, DWORD* Value);
 
-    virtual BOOL DeleteOption(const CHAR* Segment, const CHAR* Name);
+        virtual BOOL DeleteOption(const CHAR* Segment, const CHAR* Name);
 
-    virtual BOOL WriteOption(const CHAR* Segment, const CHAR* Name, CHAR* Value);
+        virtual BOOL WriteOption(const CHAR* Segment, const CHAR* Name, CHAR* Value);
 
-    virtual BOOL WriteOption(const CHAR* Segment, const CHAR* Name, DWORD Value);
+        virtual BOOL WriteOption(const CHAR* Segment, const CHAR* Name, DWORD Value);
 
-private:
-    BOOL ReadLineFromFile(FILE *fp, CHAR *Data);
+    private:
+        BOOL ReadLineFromFile(FILE *fp, CHAR *Data);
 
-    BOOL ReadAllBufferFromFile(CHAR *Data, DWORD Length);
+        BOOL ReadAllBufferFromFile(CHAR *Data, DWORD Length);
 
-    BOOL WriteAllBufferToFile(const CHAR *Data);
+        BOOL WriteAllBufferToFile(const CHAR *Data);
 
-    void InsertLineFromBuffer(CHAR *sp, CHAR *line);
+        void InsertLineFromBuffer(CHAR *sp, CHAR *line);
 
-    void DeleteLineFromBuffer(CHAR *sp);
+        void DeleteLineFromBuffer(CHAR *sp);
 
-    CHAR *GetLineFromBuffer(CHAR *sp, CHAR *dest, DWORD maxlen);
+        CHAR *GetLineFromBuffer(CHAR *sp, CHAR *dest, DWORD maxlen);
 
-    CHAR* m_szIniFileName;
+        CHAR* m_szIniFileName;
+    };
 };
-
 
 #endif

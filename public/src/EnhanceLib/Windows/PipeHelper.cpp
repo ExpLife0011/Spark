@@ -2,7 +2,9 @@
 #include "Windows\PipeHelper.h"
 #include "Common\Buffer.h"
 
-BOOL PipeReadNBytes(
+using namespace enlib;
+
+static BOOL PipeReadNBytes(
     HANDLE PipeHandle,
     PBYTE  Data,
     DWORD  Length,
@@ -205,12 +207,12 @@ exit:
     return Ret;
 }
 
-IPacketBuffer* PipeRecvAPacket(
+CObjPtr<IPacketBuffer> PipeRecvAPacket(
     HANDLE PipeHandle,
     DWORD  Timeout,
     HANDLE StopEvent)
 {
-    IPacketBuffer*   Packet;
+    CObjPtr<IPacketBuffer> spPacket = NULL;
     BASE_PACKET_T*   Header = NULL;
 
     if (PipeHandle == INVALID_HANDLE_VALUE)
@@ -227,64 +229,27 @@ IPacketBuffer* PipeRecvAPacket(
         return NULL;
     }
 
-    Packet = (IPacketBuffer*)CreateIBufferInstance(Header->Length - sizeof(BASE_PACKET_T));
+    spPacket = CreateIBufferInstance(Header->Length - sizeof(BASE_PACKET_T));
 
 	if (Header->Length > sizeof(BASE_PACKET_T))
     {
-        if (PipeReadNBytes(PipeHandle, (BYTE *)Packet->GetData(), Packet->GetBufferLength(), Timeout, StopEvent) == FALSE )
+        if (PipeReadNBytes(PipeHandle, (BYTE *)spPacket->GetData(), spPacket->GetBufferLength(), Timeout, StopEvent) == FALSE )
         {
-            Packet->Release();
             free(Header);
 	        return NULL;
         }
     }
 
-    if (Packet->DataPush(sizeof(BASE_PACKET_T)) == FALSE)
+    if (spPacket->DataPush(sizeof(BASE_PACKET_T)) == FALSE)
     {
-        Packet->Release();
         free(Header);
 	    return NULL;
     }
 
-    memcpy(Packet->GetData(), &Header, sizeof(BASE_PACKET_T));
+    memcpy(spPacket->GetData(), Header, sizeof(BASE_PACKET_T));
     free(Header);
 
-    return Packet;
-}
-
-BOOL PipeSendAPacket(HANDLE PipeHandle, 
-    IPacketBuffer* Packet, 
-    DWORD  Type,
-    DWORD  Timeout,
-    HANDLE StopEvent)
-{
-	PBASE_PACKET_T Header;
-
-    if (PipeHandle == INVALID_HANDLE_VALUE)
-    {
-        return FALSE;
-    }
-
-    if (Packet == NULL)
-    {
-        return FALSE;
-    }
-
-    if (Packet->DataPush(sizeof(BASE_PACKET_T)) == FALSE)
-    {
-	    return FALSE;
-    }
-
-    Header = (PBASE_PACKET_T)Packet->GetData();
-	Header->Length = Packet->GetBufferLength();
-	Header->Type = Type;
-
-	if (PipeWriteNBytes(PipeHandle, Packet->GetData(), Packet->GetBufferLength(), Timeout, StopEvent) == FALSE)
-	{
-		return FALSE;
-	}
-
-	return TRUE;
+    return spPacket;
 }
 
 HANDLE PipeConnectW(PWCHAR PipeName, DWORD Timeout)

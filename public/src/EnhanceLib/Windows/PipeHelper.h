@@ -8,40 +8,28 @@
 #include "Common\BasePacket.h"
 
 #ifdef UNICODE
-    #define PipeConnect PipeConnectW
+#define PipeConnect PipeConnectW
 #else
-    #define PipeConnect PipeConnectA
+#define PipeConnect PipeConnectA
 #endif
 
-extern BOOL PipeReadNBytes(
+BOOL PipeWriteNBytes(
     HANDLE PipeHandle,
     PBYTE  Data,
     DWORD  Length,
     DWORD  Timeout,
     HANDLE StopEvent);
 
-extern BOOL PipeWriteNBytes(
-    HANDLE PipeHandle,
-    PBYTE  Data,
-    DWORD  Length,
-    DWORD  Timeout,
-    HANDLE StopEvent);
-
-extern IPacketBuffer* PipeRecvAPacket(
+enlib::CObjPtr<enlib::IPacketBuffer> PipeRecvAPacket(
     HANDLE PipeHandle,
     DWORD  Timeout,
     HANDLE StopEvent);
 
-extern BOOL PipeSendAPacket(HANDLE PipeHandle,
-    IPacketBuffer* Packet,
-    DWORD  Type,
-    DWORD  Timeout,
-    HANDLE StopEvent);
+HANDLE PipeConnectA(PCHAR PipeName, DWORD Timeout);
 
-extern HANDLE PipeConnectA(PCHAR PipeName, DWORD Timeout);
+HANDLE PipeConnectW(PWCHAR PipeName, DWORD Timeout);
 
-extern HANDLE PipeConnectW(PWCHAR PipeName, DWORD Timeout);
+void PipeDisconnect(HANDLE PipeHandle);
 
-extern void PipeDisconnect(HANDLE PipeHandle);
 
 #endif

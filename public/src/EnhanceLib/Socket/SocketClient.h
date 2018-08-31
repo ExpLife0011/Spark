@@ -4,14 +4,17 @@
 #include "Socket/ISocketClient.h"
 #include "Socket/SocketBase.h"
 
-class CSocketClient : public CSocketBase, public ISocketClient
+namespace enlib
 {
-public:
-    CSocketClient(const CHAR *address, WORD port);
+    class CSocketClient : public CSocketBase, public ISocketClient
+    {
+    public:
+        CSocketClient(const CHAR *address, WORD port);
 
-    ~CSocketClient();
+        ~CSocketClient();
 
-    virtual BOOL WINAPI Connect();
+        virtual BOOL WINAPI Connect();
+    };
 };
 
 #endif

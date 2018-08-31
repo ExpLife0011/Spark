@@ -2,6 +2,8 @@
 #include "SocketBase.h"
 #include "SocketHelper.h"
 
+using namespace enlib;
+
 CSocketBase::CSocketBase() : CCommunication()
 {
     ZeroMemory(m_szDstAddress, 128);
@@ -10,7 +12,7 @@ CSocketBase::CSocketBase() : CCommunication()
     ZeroMemory(m_szSrcAddress, 128);
     m_dwSrcPort = 0;
 
-    m_Cache = new CCache(NULL);
+    m_spCache = CreateICacheInstance(NULL);
     m_bAlive = FALSE;
 
     m_socket = INVALID_SOCKET;
@@ -18,7 +20,7 @@ CSocketBase::CSocketBase() : CCommunication()
 
 CSocketBase::~CSocketBase()
 {
-    m_Cache->Release();
+
 }
 
 BOOL WINAPI CSocketBase::Open()
@@ -56,17 +58,17 @@ void WINAPI CSocketBase::Close()
     }
 }
 
-IPacketBuffer* CSocketBase::RecvAPacket(HANDLE StopEvent)
+CObjPtr<IPacketBuffer> CSocketBase::RecvAPacket(HANDLE StopEvent)
 {
     do
     {
         //read cache first
         BASE_PACKET_T* Packet;
-        Packet = m_Cache->GetPacket();
+        Packet = m_spCache->GetPacket();
         //if cache has a packet, return packet
         if (Packet != NULL)
         {
-            IPacketBuffer* Buffer = CreateIBufferInstanceEx((BYTE*)Packet->Data, Packet->Length - sizeof(BASE_PACKET_T));
+            CObjPtr<IPacketBuffer> Buffer = CreateIBufferInstanceEx((BYTE*)Packet->Data, Packet->Length - sizeof(BASE_PACKET_T));
             free(Packet);
             return Buffer;
         }
@@ -82,14 +84,14 @@ IPacketBuffer* CSocketBase::RecvAPacket(HANDLE StopEvent)
             return NULL;
         }
 
-        m_Cache->AddData(data, read);
+        m_spCache->AddData(data, read);
 
     } while (TRUE);
 
     return NULL;
 }
 
-BOOL CSocketBase::SendAPacket(IPacketBuffer* Buffer, HANDLE StopEvent)
+BOOL CSocketBase::SendAPacket(CObjPtr<IPacketBuffer> Buffer, HANDLE StopEvent)
 {
     if (!Buffer->DataPush(sizeof(BASE_PACKET_T)))
     {
@@ -122,22 +124,23 @@ BOOL CSocketBase::SendAPacket(IPacketBuffer* Buffer, HANDLE StopEvent)
     return TRUE;
 }
 
-void CSocketBase::SocketClear(ICommunication* param)
+void CSocketBase::SocketClear(CObjPtr<ICommunication> param)
 {
-    CSocketBase *Socket = dynamic_cast<CSocketBase *>(param);
+    CObjPtr<CSocketBase> spSocket = NULL;
+    spSocket = param;
 
-    if (Socket->m_bAlive)
+    if (spSocket->m_bAlive)
     {
-        Socket->StopCommunication();
+        spSocket->StopCommunication();
 
-        if (Socket->m_socket != INVALID_SOCKET)
+        if (spSocket->m_socket != INVALID_SOCKET)
         {
-            shutdown(Socket->m_socket, SD_BOTH);
-            closesocket(Socket->m_socket);
-            Socket->m_socket = INVALID_SOCKET;
+            shutdown(spSocket->m_socket, SD_BOTH);
+            closesocket(spSocket->m_socket);
+            spSocket->m_socket = INVALID_SOCKET;
         }
 
-        Socket->m_bAlive = FALSE;
+        spSocket->m_bAlive = FALSE;
     }
 }
 
