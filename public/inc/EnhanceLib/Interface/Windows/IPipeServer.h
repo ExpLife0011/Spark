@@ -20,7 +20,7 @@ namespace enlib
         virtual BOOL WINAPI IsConnected() = 0;
     };
 
-    class DLL_COMMONLIB_API IPipeServerService : public virtual CObject
+    class DLL_COMMONLIB_API IPipeServerService : public virtual CObject, public virtual CParamSet
     {
     public:
         virtual BOOL WINAPI StartMainService() = 0;
@@ -34,8 +34,6 @@ namespace enlib
         virtual void WINAPI RegisterEndHandle(EndHandle Func) = 0;
 
         virtual void WINAPI RegisterConnectHandle(ConnectHandle Func) = 0;
-
-        virtual VOID WINAPI SetParam(const CHAR* ParamKeyword, CObjPtr<CObject> Param) = 0;
     };
 };
 

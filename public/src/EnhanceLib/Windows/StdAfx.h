@@ -9,6 +9,7 @@
 #include <vector>
 #include <math.h>
 #include <map>
+#include <time.h>
 #include <list>
 #include <algorithm>
 #include <WinSock2.h>

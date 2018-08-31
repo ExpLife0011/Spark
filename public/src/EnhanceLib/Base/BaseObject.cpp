@@ -12,14 +12,14 @@ CObject::~CObject()
 
 }
 
-LONG CObject::AddRef()
+ULONG CObject::AddRef()
 {
     return InterlockedIncrement(&m_lRef);
 }
 
-LONG CObject::Release()
+ULONG CObject::Release()
 {
-    LONG Temp = InterlockedDecrement(&m_lRef);
+    ULONG Temp = InterlockedDecrement(&m_lRef);
     if (Temp == 0)
     {
         delete this;

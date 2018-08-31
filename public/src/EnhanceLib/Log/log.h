@@ -17,12 +17,6 @@
 #define LOG_BUFFSIZE   (1024 * 1024 * 4)
 #define LOG_MODULE_LEN (32)
 
-#define LOG_LEVEL_DEBUG   1
-#define LOG_LEVEL_TRACE   2
-#define LOG_LEVEL_INFO    3
-#define LOG_LEVEL_WARNING 4
-#define LOG_LEVEL_ERROR   5
-
 namespace enlib
 {
     class CLogWriter : public CObject
@@ -38,7 +32,8 @@ namespace enlib
             const CHAR* FunctionName,
             const CHAR* FileName,
             int line,
-            CHAR* logformat, ...);
+            CHAR* logmessage,
+            DWORD Size);
 
         BOOL LogClose();
     private:

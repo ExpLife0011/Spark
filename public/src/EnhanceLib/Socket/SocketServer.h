@@ -35,8 +35,6 @@ namespace enlib
 
         virtual void WINAPI RegisterConnectHandle(ConnectHandle Func);
 
-        virtual VOID WINAPI SetParam(const CHAR* ParamKeyword, CObjPtr<CObject> Param);
-
     private:
         static BOOL ServiceMainThreadProc(CObjPtr<CObject> Parameter, HANDLE StopEvent);
 
@@ -51,7 +49,6 @@ namespace enlib
         std::map<DWORD, RequestDataHandle>          m_ReqDataList;
         std::list<EndHandle>                        m_EndList;
         std::list<ConnectHandle>                    m_ConnectList;
-        std::map<UINT32, CObjPtr<CObject>>          m_ParamMap;
         SOCKET                                      m_ListenSocket;
     };
 };

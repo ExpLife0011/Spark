@@ -9,37 +9,54 @@ using namespace enlib;
 static void ServerRequestDataHandle(CObjPtr<IPacketBuffer> Buffer, DWORD Id, CObjPtr<ICommunication> Param)
 {
     DWORD* index = (DWORD*)Buffer->GetData();
-    if ((*index % 100) == 0)
-    {
-        wprintf(_T("Server Recv %d\r\n"), *index);
-    }
+    wprintf(_T("Server Recv %d\r\n"), *index);
+
+
+    Param->SendRequest(0, Buffer);
 }
+
+
+HANDLE DoneEvent = NULL;
+
+static void ClientRequestDataHandle(CObjPtr<IPacketBuffer> Buffer, DWORD Id, CObjPtr<ICommunication> Param)
+{
+    DWORD* index = (DWORD*)Buffer->GetData();
+    wprintf(_T("Client Recv %d\r\n"), *index);
+    SetEvent(DoneEvent);
+}
+
 
 static void ClientRun()
 {
     DWORD index = 0;
 
+    DoneEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+
     while (TRUE)
     {
-        HANDLE Done = CreateEvent(NULL, TRUE, FALSE, NULL);
+        
         CObjPtr<IPipeClient> spClient = CreateIPipeClientInstance(_T("\\\\.\\PIPE\\TestPipe"), 1000);
+        spClient->RegisterRequestHandle(0, ClientRequestDataHandle);
         spClient->Connect();
         CObjPtr<IPacketBuffer> spBuffer = CreateIBufferInstanceEx((PBYTE)&index, sizeof(DWORD));
-        spClient->SendRequest(0, spBuffer, Done);
-        WaitForSingleObject(Done, INFINITE);
+
+        ResetEvent(DoneEvent);
+        spClient->SendRequest(0, spBuffer, NULL);
+        WaitForSingleObject(DoneEvent, INFINITE);
         spClient->DisConnect();
-        CloseHandle(Done);
         index++;
     }
+
+    CloseHandle(DoneEvent);
 }
 
 static void ServerRun()
 {
     HANDLE StopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
-    CObjPtr<IPipeServerService> Service = CreateIPipeServerServiceInstance(_T("\\\\.\\PIPE\\TestPipe"), 1000, StopEvent);
-    Service->RegisterRequestHandle(0, ServerRequestDataHandle);
-    Service->StartMainService();
+    CObjPtr<IPipeServerService> spService = CreateIPipeServerServiceInstance(_T("\\\\.\\PIPE\\TestPipe"), 1000, StopEvent);
+    spService->RegisterRequestHandle(0, ServerRequestDataHandle);
+    spService->StartMainService();
 }
 
 

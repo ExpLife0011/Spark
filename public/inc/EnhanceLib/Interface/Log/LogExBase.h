@@ -10,11 +10,16 @@
 #endif
 
 #ifndef MODULE_NAME
-#define MODULE_NAME (CLogEx::GetModuleName())
+#define MODULE_NAME (enlib::CLogEx::GetModuleName())
 #endif
 
 #include "DllExport.h"
-#include "Log\log.h"
+
+#define LOG_LEVEL_DEBUG   1
+#define LOG_LEVEL_TRACE   2
+#define LOG_LEVEL_INFO    3
+#define LOG_LEVEL_WARNING 4
+#define LOG_LEVEL_ERROR   5
 
 namespace enlib
 {
@@ -31,29 +36,36 @@ namespace enlib
 
         static DLL_COMMONLIB_API CHAR* WINAPI GetModuleName();
 
+        static DLL_COMMONLIB_API BOOL CLogEx::LogPrintf(DWORD loglevel,
+            const CHAR* ModuleName,
+            const CHAR* FunctionName,
+            const CHAR* FileName,
+            int line,
+            CHAR* logformat, ...);
+
         static DLL_COMMONLIB_API void WINAPI LogDone();
     };
 };
 
-extern enlib::CLogWriter gLogWriter;
-
 #define L_TRACE(...)                                                                                   \
-        gLogWriter.Log(LOG_LEVEL_TRACE, MODULE_NAME, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__);   \
+        enlib::CLogEx::LogPrintf(LOG_LEVEL_TRACE, MODULE_NAME, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__);   \
 
-#define L_DEBUG(Moduel, ...)                                                                           \
-        gLogWriter.Log(LOG_LEVEL_DEBUG, MODULE_NAME, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__);   \
+#define L_DEBUG(...)                                                                           \
+        enlib::CLogEx::LogPrintf(LOG_LEVEL_DEBUG, MODULE_NAME, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__);   \
 
-#define L_INFO(Moduel, ...)                                                                            \
-        gLogWriter.Log(LOG_LEVEL_INFO, MODULE_NAME, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__);    \
+#define L_INFO(...)                                                                            \
+        enlib::CLogEx::LogPrintf(LOG_LEVEL_INFO, MODULE_NAME, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__);    \
 
-#define L_WARN(Moduel, ...)                                                                            \
-        gLogWriter.Log(LOG_LEVEL_WARNING, MODULE_NAME, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__); \
+#define L_WARN(...)                                                                            \
+        enlib::CLogEx::LogPrintf(LOG_LEVEL_WARNING, MODULE_NAME, __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__); \
 
-#define L_ERROR(Moduel, ...)                                                                           \
-        gLogWriter.Log(LOG_LEVEL_ERROR, MODULE_NAME,  __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__);  \
+#define L_ERROR(...)                                                                           \
+        enlib::CLogEx::LogPrintf(LOG_LEVEL_ERROR, MODULE_NAME,  __FUNCTION__, __FILE__, __LINE__, __VA_ARGS__);  \
 
-#define LOG_DUMP(Module, Buffer, Length)                                                               \
-        CLogEx::Dump((unsigned char*)Buffer, (unsigned int)Length);                                    \
+#define L_DUMP(Buffer, Length)                                                               \
+        enlib::CLogEx::Dump((unsigned char*)Buffer, (unsigned int)Length);                                    \
 
+#define L_TRACE_ENTER() L_TRACE(("Enter\n"))
+#define L_TRACE_LEAVE() L_TRACE(("Leave\n"))
 
 #endif

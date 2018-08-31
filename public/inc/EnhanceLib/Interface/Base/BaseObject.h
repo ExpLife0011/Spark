@@ -20,10 +20,10 @@ namespace enlib
         CObject();
         virtual ~CObject();
 
-        virtual LONG WINAPI AddRef();
-        virtual LONG WINAPI Release();
+        virtual ULONG WINAPI AddRef();
+        virtual ULONG WINAPI Release();
     private:
-        volatile LONG m_lRef;
+        volatile ULONG m_lRef;
     };
 };
 

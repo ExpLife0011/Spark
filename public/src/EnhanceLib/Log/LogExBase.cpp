@@ -5,12 +5,14 @@
 #include <winpr/file.h>
 #endif
 
+#include "Log/log.h"
 #include "Log/LogExBase.h"
 
 using namespace enlib;
 
 CHAR gModuleNameArrayA[MAX_PATH] = {'\0'};
 static CHAR* gModuleNameA = gModuleNameArrayA;
+
 
 CLogWriter gLogWriter;
 
@@ -34,6 +36,7 @@ static BOOL GetFullPathByHandle(const CHAR *filename, HMODULE hModule, CHAR* Ful
 void CLogEx::LogInit(HMODULE DllModule, CHAR* FileName, DWORD level)
 {
     CHAR FullPath[MAX_PATH + 1];
+
     GetFullPathByHandle(FileName, DllModule, FullPath);
     gLogWriter.LogInit(level, FullPath);
 }
@@ -76,4 +79,25 @@ void CLogEx::Dump(unsigned char* Buffer, unsigned int Length)
     L_TRACE("%02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
             p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], p[10], p[11], p[12], p[13], p[14], p[15]);
     L_TRACE("---------------------------------------------------\n");
+}
+
+BOOL CLogEx::LogPrintf(DWORD loglevel,
+    const CHAR* ModuleName,
+    const CHAR* FunctionName,
+    const CHAR* FileName,
+    int line,
+    CHAR* logformat, ...)
+{
+    CHAR  LogBuffer[2048];
+    ZeroMemory(LogBuffer, 2048);
+
+    CHAR* star = LogBuffer;
+
+    va_list args;
+    va_start(args, logformat);
+    DWORD Size = vsnprintf(star, 2048, logformat, args);
+    va_end(args);
+
+    gLogWriter.Log(loglevel, ModuleName, FunctionName, FileName, line, star, Size);
+    return TRUE;
 }

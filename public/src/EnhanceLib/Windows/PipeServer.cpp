@@ -80,7 +80,7 @@ BOOL CPipeServer::SendAPacket(CObjPtr<IPacketBuffer> Buffer, HANDLE StopEvent)
 	return ReturnValue;
 }
 
-CPipeServerService::CPipeServerService(TCHAR* PipeName, DWORD Timeout, HANDLE StopEvent) : CObject()
+CPipeServerService::CPipeServerService(TCHAR* PipeName, DWORD Timeout, HANDLE StopEvent) : CObject(), CParamSet()
 {
 #ifdef UNICODE
     m_szPipeName = wcsdup(PipeName);
@@ -101,10 +101,6 @@ CPipeServerService::CPipeServerService(TCHAR* PipeName, DWORD Timeout, HANDLE St
 //析构函数
 CPipeServerService::~CPipeServerService()
 {
-    std::map<UINT32, CObjPtr<CObject>>::iterator Itor;
-    std::list<CObjPtr<CObject>> TmpList;
-    std::list<CObjPtr<CObject>>::iterator TmpListItor;
-
     StopMainService();
 
     m_spMainThread = NULL;
@@ -117,24 +113,6 @@ CPipeServerService::~CPipeServerService()
 
     free(m_szPipeName);
 
-    EnterCriticalSection(&m_csLock);
-    for (Itor = m_ParamMap.begin(); Itor != m_ParamMap.end(); Itor++)
-    {
-        if (Itor->second != NULL)
-        {
-            TmpList.push_back(Itor->second);
-            Itor->second = NULL;
-        }
-    }
-    m_ParamMap.clear();
-    LeaveCriticalSection(&m_csLock);
-
-    for (TmpListItor = TmpList.begin(); TmpListItor != TmpList.end(); TmpListItor++)
-    {
-        (*TmpListItor) = NULL;
-    }
-
-    TmpList.clear();
     DeleteCriticalSection(&m_csLock);
 }
 
@@ -228,17 +206,6 @@ void CPipeServerService::RegisterConnectHandle(ConnectHandle Func)
     LeaveCriticalSection(&m_csLock);
 }
 
-VOID CPipeServerService::SetParam(const CHAR* ParamKeyword, CObjPtr<CObject> Param)
-{
-	UINT32 uHash = SuperFastHash(ParamKeyword, strlen(ParamKeyword), 1);
-   
-    EnterCriticalSection(&m_csLock);
-	m_ParamMap[uHash] = Param;
-    LeaveCriticalSection(&m_csLock);
-
-    return;
-}
-
 void CPipeServerService::InitalizeServer(CObjPtr<CPipeServer> spServer)
 {
     std::map<DWORD, RequestPacketHandle>::iterator ReqPacketIterator;
@@ -249,10 +216,7 @@ void CPipeServerService::InitalizeServer(CObjPtr<CPipeServer> spServer)
 
     EnterCriticalSection(&m_csLock);
 
-    for (ParamIterator = m_ParamMap.begin(); ParamIterator != m_ParamMap.end(); ParamIterator++)
-    {
-        spServer->SetParam(ParamIterator->first, ParamIterator->second);
-    }
+    spServer->CopyParam(this);
 
     for (ConnectIterator = m_ConnectList.begin(); ConnectIterator != m_ConnectList.end(); ConnectIterator++)
     {

@@ -33,7 +33,7 @@ BOOL WINAPI CSocketServer::Start()
     return TRUE;
 }
 
-CSocketServerService::CSocketServerService(WORD Port, HANDLE StopEvent) : CObject()
+CSocketServerService::CSocketServerService(WORD Port, HANDLE StopEvent) : CObject(), CParamSet()
 {
     m_dwSrcPort = Port;
     m_hStopEvent = StopEvent;
@@ -155,17 +155,6 @@ void CSocketServerService::RegisterConnectHandle(ConnectHandle Func)
     LeaveCriticalSection(&m_csLock);
 }
 
-VOID CSocketServerService::SetParam(const CHAR* ParamKeyword, CObjPtr<CObject> Param)
-{
-	UINT32 uHash = SuperFastHash(ParamKeyword, strlen(ParamKeyword), 1);
-   
-    EnterCriticalSection(&m_csLock);
-	m_ParamMap[uHash] = Param;
-    LeaveCriticalSection(&m_csLock);
-
-    return;
-}
-
 BOOL CSocketServerService::ServiceMainThreadProc(CObjPtr<CObject> Parameter, HANDLE StopEvent)
 {
     CObjPtr<CSocketServerService> spService = NULL;
@@ -214,10 +203,7 @@ void CSocketServerService::InitalizeServer(CObjPtr<CSocketServer> spServer)
 
     EnterCriticalSection(&m_csLock);
 
-    for (ParamIterator = m_ParamMap.begin(); ParamIterator != m_ParamMap.end(); ParamIterator++)
-    {
-        spServer->SetParam(ParamIterator->first, ParamIterator->second);
-    }
+    spServer->CopyParam(this);
 
     for (ConnectIterator = m_ConnectList.begin(); ConnectIterator != m_ConnectList.end(); ConnectIterator++)
     {

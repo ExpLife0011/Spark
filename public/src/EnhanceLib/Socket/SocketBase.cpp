@@ -4,7 +4,7 @@
 
 using namespace enlib;
 
-CSocketBase::CSocketBase() : CCommunication()
+CSocketBase::CSocketBase() : CCommunication(), CParamSet()
 {
     ZeroMemory(m_szDstAddress, 128);
     m_dwDstPort = 0;

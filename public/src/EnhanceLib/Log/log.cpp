@@ -1,10 +1,6 @@
-#include "log.h"
-#include <stdarg.h>
-#include <time.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <sys/stat.h>
+#include "stdafx.h"
+#include "Log/log.h"
+#include "Log/LogExBase.h"
 
 using namespace enlib;
 
@@ -86,7 +82,8 @@ BOOL CLogWriter::Log(DWORD loglevel,
         const CHAR* FunctionName,
         const CHAR* FileName,
         int line,
-        CHAR* logformat, ...)
+        CHAR* logmessage,
+        DWORD Size)
 {
     int _size;
     int prestrlen = 0;
@@ -96,10 +93,8 @@ BOOL CLogWriter::Log(DWORD loglevel,
     prestrlen = PremakeString(star, ModuleName, FunctionName, FileName, line, loglevel);
     star += prestrlen;
 
-    va_list args;
-    va_start(args, logformat);
-    _size = vsnprintf(star, LOG_BUFFSIZE - prestrlen, logformat, args);
-    va_end(args);
+    strncpy(star, logmessage, LOG_BUFFSIZE);
+    _size = Size;
 
     if (NULL == m_hFileHandle)
         fprintf(stderr, "%s", m_pBuffer);
@@ -137,8 +132,6 @@ int CLogWriter::PremakeString(CHAR* pBuffer,
         ThreadId,
         FunctionName);
 }
-
-
 
 BOOL CLogWriter::WriteLog(CHAR* pbuffer, int len)
 {
